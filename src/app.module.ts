@@ -6,8 +6,8 @@ import * as winston from 'winston';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
-import { HealthModule } from './enitities/health/health.module';
-import { AuthMeModule } from './enitities/authme/auth.module';
+import { HealthModule } from './modules/health/health.module';
+import { AuthMeModule } from './modules/authme/auth.module';
 
 import { AppController } from './app.controller';
 import { TypeOrmConfigService } from './config';
