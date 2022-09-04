@@ -21,7 +21,7 @@ export class AuthMeService {
     if (realname) {
       queryBuilder.andWhere(
         new Brackets((qb) => {
-          qb.where("authme.realname ILIKE '%' || :realname || '%'", { realname });
+          qb.where(`authme.realname LIKE '%${realname}%'`);
         }),
       );
     }
@@ -29,7 +29,7 @@ export class AuthMeService {
     if (username) {
       queryBuilder.andWhere(
         new Brackets((qb) => {
-          qb.where("authme.username ILIKE '%' || :username || '%'", { username });
+          qb.where(`authme.username LIKE '%${username}%'`);
         }),
       );
     }
