@@ -1,13 +1,13 @@
 import { Column, Entity, ManyToMany } from "typeorm";
 import { Exclude } from "class-transformer";
 
-import { IAuth } from "./interfaces";
+import { IPlayer } from "./interfaces";
 import { IdDateBaseEntity } from "../../common/entity";
 import { IsOptional, IsString, IsInt, IsNumber } from "class-validator";
 import { PermissionEntity } from "../permissions/permission.entity";
 
-@Entity({ name: 'authme' })
-export class AuthMeEntity extends IdDateBaseEntity implements IAuth {
+@Entity({ name: 'players' })
+export class PlayerEntity extends IdDateBaseEntity implements IPlayer {
   @Exclude()
   @Column({ type: "varchar", select: false })
   public password: string;

@@ -1,6 +1,6 @@
 import { IPermission } from "../../permissions/interfaces";
 
-export interface IAuth {
+export interface IPlayer {
   id: number;
   username: string;
   realname: string;

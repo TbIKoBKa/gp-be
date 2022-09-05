@@ -1,4 +1,4 @@
-export interface IAuthMeSearchDto {
+export interface IPlayerSearchDto {
   username: string;
   realname: string;
 }

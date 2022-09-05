@@ -7,28 +7,28 @@ import { Brackets, DeleteResult, FindOptionsWhere, Repository } from "typeorm";
 import { PermissionEntity } from "../permissions/permission.entity";
 import { PermissionInheritanceEntity } from "../permissions/permissionInheritance.entity";
 
-import { AuthMeEntity } from "./auth.entity";
-import { IAuthMeSearchDto } from "./interfaces";
+import { PlayerEntity } from "./player.entity";
+import { IPlayerSearchDto } from "./interfaces";
 
 @Injectable()
-export class AuthMeService {
+export class PlayerService {
   constructor(
-    @InjectRepository(AuthMeEntity)
-    private readonly authMeEntityRepository: Repository<AuthMeEntity>,
+    @InjectRepository(PlayerEntity)
+    private readonly playersEntityRepository: Repository<PlayerEntity>,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
 
-  public async search(dto: IAuthMeSearchDto): Promise<[Array<AuthMeEntity>, number]> {
+  public async search(dto: IPlayerSearchDto): Promise<[Array<PlayerEntity>, number]> {
     const { realname, username } = dto;
-    const queryBuilder = this.authMeEntityRepository.createQueryBuilder("authme");
+    const queryBuilder = this.playersEntityRepository.createQueryBuilder("players");
 
     queryBuilder.select();
 
     if (realname) {
       queryBuilder.andWhere(
         new Brackets((qb) => {
-          qb.where(`authme.realname LIKE '%${realname}%'`);
+          qb.where(`players.realname LIKE '%${realname}%'`);
         }),
       );
     }
@@ -36,50 +36,50 @@ export class AuthMeService {
     if (username) {
       queryBuilder.andWhere(
         new Brackets((qb) => {
-          qb.where(`authme.username LIKE '%${username}%'`);
+          qb.where(`players.username LIKE '%${username}%'`);
         }),
       );
     }
 
-    queryBuilder.leftJoinAndMapOne('authme.permission', PermissionEntity, 'permission', 'authme.realname = permission.value');
+    queryBuilder.leftJoinAndMapOne('players.permission', PermissionEntity, 'permission', 'players.realname = permission.value');
     queryBuilder.leftJoinAndMapOne('permission.permissionInheritance', PermissionInheritanceEntity, 'permissionInheritance', 'permission.name = permissionInheritance.child');
 
     //TODO Maybe use pagination & sort?
-    // queryBuilder.orderBy(`authme.${sortBy}`, sort.toUpperCase());
+    // queryBuilder.orderBy(`players.${sortBy}`, sort.toUpperCase());
 
     // queryBuilder.skip(skip);
     // queryBuilder.take(take);
 
-    const authList = await queryBuilder.getManyAndCount();
+    const playersList = await queryBuilder.getManyAndCount();
 
     const MOJANG_API = this.configService.get('MOJANG_API');
     const MCHEAD_API = this.configService.get('MCHEAD_API');
 
-    const mappedAuths = authList[ 0 ].map(async (auth) => {
+    const mappedPlayers = playersList[ 0 ].map(async (player) => {
       const { data } = await lastValueFrom(
-        this.httpService.get(`${MOJANG_API}/users/profiles/minecraft/${auth.username}`),
+        this.httpService.get(`${MOJANG_API}/users/profiles/minecraft/${player.username}`),
       );
 
       const uuid: string = data.id;
 
       const avatar = `${MCHEAD_API}/avatar/${uuid}`;
 
-      auth.avatar = avatar;
-      auth.uuid = uuid;
+      player.avatar = avatar;
+      player.uuid = uuid;
 
-      return auth;
+      return player;
     });
 
-    const responseList = await Promise.all(mappedAuths);
+    const responseList = await Promise.all(mappedPlayers);
 
-    return [ responseList, authList[ 1 ] ];
+    return [ responseList, playersList[ 1 ] ];
   }
 
-  public findOne(where: FindOptionsWhere<AuthMeEntity>): Promise<AuthMeEntity | null> {
-    return this.authMeEntityRepository.findOne({ where });
+  public findOne(where: FindOptionsWhere<PlayerEntity>): Promise<PlayerEntity | null> {
+    return this.playersEntityRepository.findOne({ where });
   }
 
-  public delete(where: FindOptionsWhere<AuthMeEntity>): Promise<DeleteResult> {
-    return this.authMeEntityRepository.delete(where);
+  public delete(where: FindOptionsWhere<PlayerEntity>): Promise<DeleteResult> {
+    return this.playersEntityRepository.delete(where);
   }
 }

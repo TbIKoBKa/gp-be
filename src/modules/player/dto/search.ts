@@ -1,9 +1,9 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { IsString, IsOptional } from "class-validator";
 
-import { IAuthMeSearchDto } from '../interfaces';
+import { IPlayerSearchDto } from '../interfaces';
 
-export class AuthMeSearchDto implements IAuthMeSearchDto {
+export class PlayerSearchDto implements IPlayerSearchDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString({

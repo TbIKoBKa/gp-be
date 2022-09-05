@@ -7,7 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { HealthModule } from './modules/health/health.module';
-import { AuthMeModule } from './modules/authme/auth.module';
+import { PlayerModule } from './modules/player/player.module';
 
 import { AppController } from './app.controller';
 import { TypeOrmConfigService } from './config';
@@ -68,7 +68,7 @@ import { HttpExceptionFilter } from './utils';
       limit: 200,
     }),
     HealthModule,
-    AuthMeModule,
+    PlayerModule,
   ],
   controllers: [ AppController ],
 })
