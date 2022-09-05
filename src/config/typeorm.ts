@@ -2,6 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from "@nestjs/typeorm";
 
 import { AuthMeEntity } from "../modules/authme/auth.entity";
+import { PermissionEntity } from "../modules/permissions/permission.entity";
+import { PermissionInheritanceEntity } from "../modules/permissions/permissionInheritance.entity";
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -14,7 +16,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       username: process.env.MYSQL_USER,
       password: process.env.MYSQL_PASSWORD,
       database: process.env.MYSQL_NAME,
-      entities: [ AuthMeEntity ],
+      entities: [ AuthMeEntity, PermissionEntity, PermissionInheritanceEntity ],
     };
   }
 }

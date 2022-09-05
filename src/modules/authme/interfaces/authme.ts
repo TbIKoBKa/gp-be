@@ -1,3 +1,5 @@
+import { IPermission } from "../../permissions/interfaces";
+
 export interface IAuth {
   id: number;
   username: string;
@@ -17,4 +19,7 @@ export interface IAuth {
   isLogged: number;
   hasSession: number;
   totp: string | number;
+  avatar: string;
+  uuid: string;
+  permission?: IPermission;
 }
