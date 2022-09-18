@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from "@nestjs/typeorm";
 
 import { PlayerEntity } from "../modules/player/player.entity";
+import { ContactEntity } from "../modules/contacts/contacts.entity";
 import { PermissionEntity } from "../modules/permissions/permission.entity";
 import { PermissionInheritanceEntity } from "../modules/permissions/permissionInheritance.entity";
 
@@ -16,7 +17,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       username: process.env.MYSQL_USER,
       password: process.env.MYSQL_PASSWORD,
       database: process.env.MYSQL_NAME,
-      entities: [ PlayerEntity, PermissionEntity, PermissionInheritanceEntity ],
+      entities: [ PlayerEntity, ContactEntity, PermissionEntity, PermissionInheritanceEntity ],
     };
   }
 }

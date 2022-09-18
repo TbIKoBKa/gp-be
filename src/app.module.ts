@@ -8,6 +8,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { HealthModule } from './modules/health/health.module';
 import { PlayerModule } from './modules/player/player.module';
+import { ContactsModule } from './modules/contacts/contacts.module';
 
 import { AppController } from './app.controller';
 import { TypeOrmConfigService } from './config';
@@ -69,6 +70,7 @@ import { HttpExceptionFilter } from './utils';
     }),
     HealthModule,
     PlayerModule,
+    ContactsModule,
   ],
   controllers: [ AppController ],
 })
