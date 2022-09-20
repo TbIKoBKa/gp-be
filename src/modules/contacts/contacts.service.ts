@@ -19,14 +19,10 @@ export class ContactsService {
 
     const contacts = await queryBuilder.getMany();
 
-    console.log({
-      discord: contacts[ 0 ],
-      vk:      contacts[ 1 ],
-    });
-
     return {
       discord: contacts[ 0 ],
       vk:      contacts[ 1 ],
+      tg:      contacts[ 2 ],
     };
   }
 }
