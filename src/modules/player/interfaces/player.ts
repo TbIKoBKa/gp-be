@@ -20,6 +20,7 @@ export interface IPlayer {
   hasSession: number;
   totp: string | number;
   avatar: string;
+  fullbody: string;
   uuid: string;
   permission?: IPermission;
 }

@@ -20,7 +20,8 @@ export class PlayerEntity extends IdDateBaseEntity implements IPlayer {
   @IsString()
   public realname: string;
 
-  @Column({ type: "varchar" })
+  @Exclude()
+  @Column({ type: "varchar", select: false })
   @IsString()
   public ip: string;
 
@@ -48,7 +49,8 @@ export class PlayerEntity extends IdDateBaseEntity implements IPlayer {
   @IsInt()
   public regdate: number;
 
-  @Column({ type: "varchar" })
+  @Exclude()
+  @Column({ type: "varchar", select: false })
   @IsString()
   public regip: string;
 
@@ -83,6 +85,10 @@ export class PlayerEntity extends IdDateBaseEntity implements IPlayer {
   @IsString()
   @IsOptional()
   public avatar: string;
+
+  @IsString()
+  @IsOptional()
+  public fullbody: string;
 
   @ManyToMany(() => PermissionEntity)
   @IsOptional()

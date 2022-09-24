@@ -63,8 +63,10 @@ export class PlayerService {
       const uuid: string = data.id;
 
       const avatar = `${MCHEAD_API}/avatar/${uuid}`;
+      const fullbody = `${MCHEAD_API}/player/${uuid}`;
 
       player.avatar = avatar;
+      player.fullbody = fullbody;
       player.uuid = uuid;
 
       return player;
