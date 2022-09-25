@@ -4,7 +4,7 @@ import { Exclude } from "class-transformer";
 import { IPlayer } from "./interfaces";
 import { IdDateBaseEntity } from "../../common/entity";
 import { IsOptional, IsString, IsInt, IsNumber } from "class-validator";
-import { PermissionEntity } from "../permissions/permission.entity";
+import { PermissionEntity } from "../permissions/permissions.entity";
 
 @Entity({ name: 'players' })
 export class PlayerEntity extends IdDateBaseEntity implements IPlayer {

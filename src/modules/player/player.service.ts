@@ -4,7 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { lastValueFrom } from "rxjs";
 import { Brackets, DeleteResult, FindOptionsWhere, Repository } from "typeorm";
-import { PermissionEntity } from "../permissions/permission.entity";
+import { PermissionEntity } from "../permissions/permissions.entity";
 import { PermissionInheritanceEntity } from "../permissions/permissionInheritance.entity";
 
 import { PlayerEntity } from "./player.entity";
