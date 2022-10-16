@@ -8,6 +8,12 @@ export class PermissionEntityEntity extends IdDateBaseEntity implements IPermiss
   @Column({ type: 'varchar' })
   public name: string;
 
+  @Column({ type: 'varchar' })
+  public image: string;
+
   @Column({ type: 'smallint' })
-  public price: number;
+  public price_forever: number;
+
+  @Column({ type: 'smallint' })
+  public price_month: number;
 }

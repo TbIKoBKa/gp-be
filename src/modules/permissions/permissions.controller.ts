@@ -6,7 +6,7 @@ import {
 import { PermissionsService } from "./permissions.service";
 import { IPermissionEntity } from "./interfaces";
 
-@Controller("/permissions")
+@Controller("/privileges")
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}
 
