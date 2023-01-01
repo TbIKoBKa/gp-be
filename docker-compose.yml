@@ -4,8 +4,17 @@ services:
   nestjs:
     build: ./
     container_name: gp_be
-    env_file:
-      - .env.production
+    environment:
+      HOST: ${HOST}
+      PORT: ${PORT}
+      FE_URL: ${FE_URL}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_NAME: ${MYSQL_NAME}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MOJANG_API: ${MOJANG_API}
+      MCHEAD_API: ${MCHEAD_API}
     ports:
       - "3000:3000"
     networks:
