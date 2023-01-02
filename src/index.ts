@@ -53,11 +53,10 @@ async function bootstrap(): Promise<void> {
   //   app.enableShutdownHooks();
   // }
 
-  const host = configService.get<string>("HOST", "localhost");
   const port = configService.get<number>("PORT", 3001);
 
-  await app.listen(port, host, () => {
-    console.info(`API server is running on http://${host}:${port}`);
+  await app.listen(port, () => {
+    console.info(`API server is running on ${port} port`);
   });
 }
 
