@@ -22,13 +22,13 @@ async function bootstrap(): Promise<void> {
 
   const configService = app.get(ConfigService);
 
-  const baseUrl = configService.get<string>("FE_URL", "http://localhost:3000");
+  // const baseUrl = configService.get<string>("FE_URL", "http://localhost:3000");
 
   app.enableCors({
-    origin:
-      process.env.NODE_ENV === "development"
-        ? [ "http://localhost:3000", "http://127.0.0.1:3000", "http://0.0.0.0:3000" ]
-        : [ baseUrl ],
+    origin:         [ "*" ],
+    // process.env.NODE_ENV === "development"
+    //   ? [ "http://localhost:3000", "http://127.0.0.1:3000", "http://0.0.0.0:3000" ]
+    //   : [ baseUrl ],
     credentials:    true,
     exposedHeaders: [ "Content-Disposition" ],
   });
