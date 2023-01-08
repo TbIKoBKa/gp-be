@@ -45,21 +45,17 @@ export class PermissionsService {
     const matchOne = await this.permissionEntityEntityRepository.findOneBy({ id });
 
     if (matchOne) {
+      const LIQPAY_PUBLIC_KEY = this.configService.get('LIQPAY_PUBLIC_KEY');
+      const LIQPAY_PRIVATE_KEY = this.configService.get('LIQPAY_PRIVATE_KEY');
+      const LIQPAY_SERVER_URL = this.configService.get('LIQPAY_SERVER_URL');
+
       const periodPrice = period === BuyPeriodType.MONTH
         ? matchOne.price_month
         : matchOne.price_forever;
 
-      console.log('currency', currency);
-
       const targetPrice = currency === CurrencyType.RUB
         ? periodPrice
-        : await convertCurrency("RUB", currency, periodPrice);
-
-      console.log('targetPrice', targetPrice);
-
-      const LIQPAY_PUBLIC_KEY = this.configService.get('LIQPAY_PUBLIC_KEY');
-      const LIQPAY_PRIVATE_KEY = this.configService.get('LIQPAY_PRIVATE_KEY');
-      const LIQPAY_SERVER_URL = this.configService.get('LIQPAY_SERVER_URL');
+        : await convertCurrency("RUB", currency, periodPrice, process.env.NODE_ENV !== 'development');
 
       const createdOrder = await this.orderEntityRepository
         .create({
