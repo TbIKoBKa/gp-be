@@ -49,9 +49,13 @@ export class PermissionsService {
         ? matchOne.price_month
         : matchOne.price_forever;
 
+      console.log('currency', currency);
+
       const targetPrice = currency === CurrencyType.RUB
         ? periodPrice
         : await convertCurrency("RUB", currency, periodPrice);
+
+      console.log('targetPrice', targetPrice);
 
       const LIQPAY_PUBLIC_KEY = this.configService.get('LIQPAY_PUBLIC_KEY');
       const LIQPAY_PRIVATE_KEY = this.configService.get('LIQPAY_PRIVATE_KEY');
