@@ -8,10 +8,11 @@ import { PermissionsController } from "./permissions.controller";
 import { PermissionEntityEntity } from "./permissionEntity.entity";
 import { PermissionInheritanceEntity } from "./permissionInheritance.entity";
 import { PermissionEntity } from "./permissions.entity";
+import { OrderEntity } from "../orders/orders.entity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ PermissionEntityEntity, PermissionInheritanceEntity, PermissionEntity ]),
+    TypeOrmModule.forFeature([ OrderEntity, PermissionEntityEntity, PermissionInheritanceEntity, PermissionEntity ]),
     ConfigModule,
     HttpModule,
   ],

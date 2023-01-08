@@ -10,6 +10,7 @@ import { HealthModule } from './modules/health/health.module';
 import { PlayerModule } from './modules/player/player.module';
 import { ContactsModule } from './modules/contacts/contacts.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
 import { AppController } from './app.controller';
 import { TypeOrmConfigService } from './config';
@@ -73,6 +74,7 @@ import { HttpExceptionFilter } from './utils';
     PlayerModule,
     ContactsModule,
     PermissionsModule,
+    OrdersModule,
   ],
   controllers: [ AppController ],
 })
