@@ -11,7 +11,6 @@ import { PermissionsType } from './types';
 import { PermissionBuyDto } from "./dto";
 import { BuyPeriodType, CurrencyType } from "../../common/types";
 import { convertCurrency } from "../../utils/convertCurrency";
-import { getLanguageByCurrency } from "../../utils/getLanguageByCurrency";
 
 const totalPermissions: string[] = Object.values(PermissionsType);
 
@@ -40,7 +39,7 @@ export class PermissionsService {
   }
 
   public async buy(id: number, body: PermissionBuyDto): Promise<IPermissionBuyResponseDto> {
-    const { currency, period, nickname } = body;
+    const { currency, period, nickname, language } = body;
 
     const matchOne = await this.permissionEntityEntityRepository.findOneBy({ id });
 
@@ -77,7 +76,7 @@ export class PermissionsService {
         order_id:     String(createdOrder.id),
         product_name: matchOne.name,
         server_url:   LIQPAY_SERVER_URL,
-        language:     getLanguageByCurrency(currency),
+        language,
       });
 
       const data = Buffer.from(json_string).toString('base64');
