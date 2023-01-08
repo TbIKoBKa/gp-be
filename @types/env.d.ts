@@ -2,14 +2,19 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       NODE_ENV: "development" | "production" | "test" | "staging";
-      PORT: number;
       HOST: string;
+      PORT: number;
       FE_URL: string;
       MYSQL_HOST: string;
       MYSQL_PORT: number;
       MYSQL_NAME: string;
       MYSQL_USER: string;
       MYSQL_PASSWORD: string;
+      MOJANG_API: string;
+      MCHEAD_API: string;
+      LIQPAY_PUBLIC_KEY: string;
+      LIQPAY_PRIVATE_KEY: string;
+      LIQPAY_SERVER_URL: string;
     }
   }
 }
