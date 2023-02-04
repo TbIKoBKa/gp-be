@@ -1,16 +1,13 @@
-import {
-  Controller,
-  Get,
-} from "@nestjs/common";
+import { Controller, Get } from '@nestjs/common';
 
-import { ContactsService } from "./contacts.service";
-import { IContacts } from "./interfaces";
+import { ContactsService } from './contacts.service';
+import { IContacts } from './interfaces';
 
-@Controller("/contacts")
+@Controller('/contacts')
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 
-  @Get("/")
+  @Get('/')
   public search(): Promise<IContacts> {
     return this.contactsService.search();
   }

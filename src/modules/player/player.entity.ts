@@ -1,15 +1,15 @@
-import { Column, Entity, ManyToMany } from "typeorm";
-import { Exclude } from "class-transformer";
+import { Column, Entity, ManyToMany } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
-import { IPlayer } from "./interfaces";
-import { IdDateBaseEntity } from "../../common/entity";
-import { IsOptional, IsString, IsInt, IsNumber } from "class-validator";
-import { PermissionEntity } from "../permissions/permissions.entity";
+import { IPlayer } from './interfaces';
+import { IdDateBaseEntity } from '../../common/entity';
+import { IsOptional, IsString, IsInt, IsNumber } from 'class-validator';
+import { PermissionEntity } from '../permissions/permissions.entity';
 
 @Entity({ name: 'players' })
 export class PlayerEntity extends IdDateBaseEntity implements IPlayer {
   @Exclude()
-  @Column({ type: "varchar", select: false })
+  @Column({ type: 'varchar', select: false })
   public password: string;
 
   @Column({ type: 'varchar' })
@@ -21,60 +21,60 @@ export class PlayerEntity extends IdDateBaseEntity implements IPlayer {
   public realname: string;
 
   @Exclude()
-  @Column({ type: "varchar", select: false })
+  @Column({ type: 'varchar', select: false })
   @IsString()
   public ip: string;
 
-  @Column({ type: "bigint" })
+  @Column({ type: 'bigint' })
   @IsInt()
   public lastlogin: number;
 
-  @Column({ type: "double" })
+  @Column({ type: 'double' })
   @IsNumber()
   public x: number;
 
-  @Column({ type: "double" })
+  @Column({ type: 'double' })
   @IsNumber()
   public y: number;
 
-  @Column({ type: "double" })
+  @Column({ type: 'double' })
   @IsNumber()
   public z: number;
 
-  @Column({ type: "varchar" })
+  @Column({ type: 'varchar' })
   @IsString()
   public world: string;
 
-  @Column({ type: "bigint" })
+  @Column({ type: 'bigint' })
   @IsInt()
   public regdate: number;
 
   @Exclude()
-  @Column({ type: "varchar", select: false })
+  @Column({ type: 'varchar', select: false })
   @IsString()
   public regip: string;
 
-  @Column({ type: "float" })
+  @Column({ type: 'float' })
   @IsNumber()
   public yaw: number;
 
-  @Column({ type: "float" })
+  @Column({ type: 'float' })
   @IsNumber()
   public pitch: number;
 
-  @Column({ type: "varchar" })
+  @Column({ type: 'varchar' })
   @IsString()
   public email: string;
 
-  @Column({ type: "smallint" })
+  @Column({ type: 'smallint' })
   @IsInt()
   public isLogged: number;
 
-  @Column({ type: "smallint" })
+  @Column({ type: 'smallint' })
   @IsInt()
   public hasSession: number;
 
-  @Column({ type: "varchar" })
+  @Column({ type: 'varchar' })
   @IsString()
   public totp: string;
 

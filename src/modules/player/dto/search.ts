@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsString, IsOptional } from "class-validator";
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsOptional } from 'class-validator';
 
 import { IPlayerSearchDto } from '../interfaces';
 

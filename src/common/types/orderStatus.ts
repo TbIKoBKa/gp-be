@@ -31,4 +31,4 @@ export type TOrderStatus =
   | 'wait_compensation'
   | 'wait_lc'
   | 'wait_reserve'
-  | 'wait_secure'
+  | 'wait_secure';

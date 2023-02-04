@@ -20,15 +20,15 @@ import { HttpExceptionFilter } from './utils';
   providers: [
     Logger,
     {
-      provide:  APP_PIPE,
+      provide: APP_PIPE,
       useClass: ValidationPipe,
     },
     {
-      provide:  APP_FILTER,
+      provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
     {
-      provide:  APP_GUARD,
+      provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
   ],
@@ -37,7 +37,7 @@ import { HttpExceptionFilter } from './utils';
       envFilePath: `.env.${process.env.NODE_ENV as string}`,
     }),
     WinstonModule.forRootAsync({
-      imports:    [ ConfigModule ],
+      imports: [ConfigModule],
       useFactory: () => {
         return {
           transports: [
@@ -49,13 +49,15 @@ import { HttpExceptionFilter } from './utils';
                 winston.format.printf((debug) => {
                   const { timestamp, level, message, context, ms } = debug;
 
-                  return `[Nest] ${timestamp as string}\t${level.toUpperCase()} [${context as string}] ${
+                  return `[Nest] ${
+                    timestamp as string
+                  }\t${level.toUpperCase()} [${context as string}] ${
                     message as string
                   } ${ms as string}`;
                 }),
                 winston.format.colorize({
                   all: true,
-                }),
+                })
               ),
             }),
           ],
@@ -63,11 +65,11 @@ import { HttpExceptionFilter } from './utils';
       },
     }),
     TypeOrmModule.forRootAsync({
-      imports:  [ ConfigModule ],
+      imports: [ConfigModule],
       useClass: TypeOrmConfigService,
     }),
     ThrottlerModule.forRoot({
-      ttl:   60,
+      ttl: 60,
       limit: 200,
     }),
     HealthModule,
@@ -76,6 +78,6 @@ import { HttpExceptionFilter } from './utils';
     PermissionsModule,
     OrdersModule,
   ],
-  controllers: [ AppController ],
+  controllers: [AppController],
 })
 export class AppModule {}

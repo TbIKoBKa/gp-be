@@ -5,5 +5,5 @@ export enum PermissionsType {
   LEGEND = 'legend',
   ADMIN = 'admin',
   GOD = 'god',
-  MASTER = 'master'
+  MASTER = 'master',
 }

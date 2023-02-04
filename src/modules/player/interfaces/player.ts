@@ -1,4 +1,4 @@
-import { IPermission } from "../../permissions/interfaces";
+import { IPermission } from '../../permissions/interfaces';
 
 export interface IPlayer {
   id: number;

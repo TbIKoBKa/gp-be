@@ -1,6 +1,10 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsString, IsNumber } from "class-validator";
-import { BuyPeriodType, CurrencyType, LanguageType } from "../../../common/types";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNumber } from 'class-validator';
+import {
+  BuyPeriodType,
+  CurrencyType,
+  LanguageType,
+} from '../../../common/types';
 
 import { IPermissionBuyDto } from '../interfaces';
 

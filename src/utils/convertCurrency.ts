@@ -4,7 +4,7 @@ export const convertCurrency = async (
   from: string,
   to: string,
   amount: number,
-  isDecimalComma: boolean,
+  isDecimalComma: boolean
 ): Promise<number> => {
   const converter = new CC({ from, to, amount, isDecimalComma });
 

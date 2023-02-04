@@ -1,4 +1,8 @@
-import { BuyPeriodType, CurrencyType, LanguageType } from "../../../common/types";
+import {
+  BuyPeriodType,
+  CurrencyType,
+  LanguageType,
+} from '../../../common/types';
 
 export interface IPermissionBuyDto {
   nickname: string;
