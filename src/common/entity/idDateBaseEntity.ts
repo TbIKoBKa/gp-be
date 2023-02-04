@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, BaseEntity } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, BaseEntity } from 'typeorm';
 
 export interface IIdDateBase {
   id: number;

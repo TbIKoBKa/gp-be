@@ -1,8 +1,8 @@
-import { Column, Entity } from "typeorm";
-import { IsString } from "class-validator";
+import { Column, Entity } from 'typeorm';
+import { IsString } from 'class-validator';
 
-import { IContact } from "./interfaces";
-import { IdDateBaseEntity } from "../../common/entity";
+import { IContact } from './interfaces';
+import { IdDateBaseEntity } from '../../common/entity';
 
 @Entity({ name: 'contacts' })
 export class ContactEntity extends IdDateBaseEntity implements IContact {

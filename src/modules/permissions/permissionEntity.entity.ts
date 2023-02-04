@@ -1,10 +1,13 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity } from 'typeorm';
 
-import { IPermissionEntity } from "./interfaces";
-import { IdDateBaseEntity } from "../../common/entity";
+import { IPermissionEntity } from './interfaces';
+import { IdDateBaseEntity } from '../../common/entity';
 
 @Entity({ name: 'permissions_entity' })
-export class PermissionEntityEntity extends IdDateBaseEntity implements IPermissionEntity {
+export class PermissionEntityEntity
+  extends IdDateBaseEntity
+  implements IPermissionEntity
+{
   @Column({ type: 'varchar' })
   public name: string;
 

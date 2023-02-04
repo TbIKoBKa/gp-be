@@ -13,16 +13,17 @@ import { SkipThrottle } from '@nestjs/throttler';
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
-    private readonly db: TypeOrmHealthIndicator,
+    private readonly db: TypeOrmHealthIndicator
   ) {}
 
   @Get()
   @HealthCheck()
   readiness(): Promise<HealthCheckResult> {
     return this.health.check([
-      async (): Promise<HealthIndicatorResult> => this.db.pingCheck('DB', {
-        timeout: 600,
-      }),
+      async (): Promise<HealthIndicatorResult> =>
+        this.db.pingCheck('DB', {
+          timeout: 600,
+        }),
     ]);
   }
 }

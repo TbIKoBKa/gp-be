@@ -1,17 +1,17 @@
-import { ConfigService } from "@nestjs/config";
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { DeleteResult, FindOptionsWhere, Repository } from "typeorm";
+import { ConfigService } from '@nestjs/config';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
 
-import { OrderEntity } from "./orders.entity";
-import { CallbackOrderDto } from "./dto";
+import { OrderEntity } from './orders.entity';
+import { CallbackOrderDto } from './dto';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(OrderEntity)
     private readonly ordersEntityRepository: Repository<OrderEntity>,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   public async search(): Promise<[Array<OrderEntity>, number]> {
@@ -44,7 +44,9 @@ export class OrdersService {
     return 'Callback';
   }
 
-  public findOne(where: FindOptionsWhere<OrderEntity>): Promise<OrderEntity | null> {
+  public findOne(
+    where: FindOptionsWhere<OrderEntity>
+  ): Promise<OrderEntity | null> {
     return this.ordersEntityRepository.findOne({ where });
   }
 

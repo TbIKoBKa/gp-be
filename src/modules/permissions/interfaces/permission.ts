@@ -1,4 +1,4 @@
-import { IPermissionInheritance } from "./permissionInheritance";
+import { IPermissionInheritance } from './permissionInheritance';
 
 export interface IPermission {
   id: number;

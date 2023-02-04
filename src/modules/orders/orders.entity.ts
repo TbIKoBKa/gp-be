@@ -1,8 +1,8 @@
-import { Column,  Entity } from "typeorm";
+import { Column, Entity } from 'typeorm';
 
-import { IOrder } from "./interfaces";
-import { IdDateBaseEntity } from "../../common/entity";
-import { CurrencyType } from "../../common/types";
+import { IOrder } from './interfaces';
+import { IdDateBaseEntity } from '../../common/entity';
+import { CurrencyType } from '../../common/types';
 
 @Entity({ name: 'orders' })
 export class OrderEntity extends IdDateBaseEntity implements IOrder {
