@@ -22,7 +22,7 @@ export class ContactsService {
 
     return {
       discord: contacts[0],
-      vk: contacts[1],
+      email: contacts[1],
       tg: contacts[2],
     };
   }
