@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import crypto from 'crypto';
 
 import { OrderEntity } from '../orders/orders.entity';
 import { PermissionEntityEntity } from './permissionEntity.entity';
@@ -11,6 +10,7 @@ import { PermissionsType } from './types';
 import { PermissionBuyDto } from './dto';
 import { BuyPeriodType, CurrencyType } from '../../common/types';
 import { convertCurrency } from '../../utils/convertCurrency';
+import { getDataStringFromDataObject, getSignature } from '../../utils/liqpay';
 
 const totalPermissions: string[] = Object.values(PermissionsType);
 
@@ -77,6 +77,7 @@ export class PermissionsService {
         .create({
           amount: targetPrice,
           currency,
+          status: 'pending',
           meta: {
             nickname,
             period,
@@ -85,7 +86,7 @@ export class PermissionsService {
         })
         .save();
 
-      const json_string = JSON.stringify({
+      const json = {
         version: 3,
         public_key: LIQPAY_PUBLIC_KEY,
         private_key: LIQPAY_PRIVATE_KEY,
@@ -102,17 +103,18 @@ export class PermissionsService {
           period,
           permission_id: matchOne.id,
         }),
+      };
+
+      const data = getDataStringFromDataObject(json);
+
+      const signature = getSignature({
+        data,
+        privateKey: LIQPAY_PRIVATE_KEY,
       });
-
-      const data = Buffer.from(json_string).toString('base64');
-
-      const sign_string = LIQPAY_PRIVATE_KEY + data + LIQPAY_PRIVATE_KEY;
-      const shasum = crypto.createHash('sha1');
-      shasum.update(sign_string);
-      const signature = shasum.digest('base64');
 
       return { data, signature };
     }
+
     throw new NotFoundException();
   }
 }
