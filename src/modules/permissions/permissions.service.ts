@@ -97,6 +97,11 @@ export class PermissionsService {
         product_name: matchOne.name,
         server_url: LIQPAY_SERVER_URL,
         language,
+        info: JSON.stringify({
+          nickname,
+          period,
+          permission_id: matchOne.id,
+        }),
       });
 
       const data = Buffer.from(json_string).toString('base64');

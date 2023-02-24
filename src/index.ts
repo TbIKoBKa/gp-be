@@ -41,16 +41,13 @@ async function bootstrap(): Promise<void> {
 
   app.set('trust proxy', true);
 
-  if (process.env.NODE_ENV === 'development') {
-    const options = new DocumentBuilder()
-      .addBearerAuth()
-      .setTitle('GP')
-      .setDescription('API description')
-      .setVersion('1.0')
-      .build();
-    const document = SwaggerModule.createDocument(app, options);
-    SwaggerModule.setup('swagger', app, document);
-  }
+  const options = new DocumentBuilder()
+    .setTitle('GP')
+    .setDescription('API description')
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup('swagger', app, document);
 
   await app
     .startAllMicroservices()
