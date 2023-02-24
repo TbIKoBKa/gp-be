@@ -1,10 +1,11 @@
 import { ConfigService } from '@nestjs/config';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
 
 import { OrderEntity } from './orders.entity';
 import { CallbackOrderDto } from './dto';
+import { getDataObjectFromDataString, getSignature } from '../../utils/liqpay';
 
 @Injectable()
 export class OrdersService {
@@ -18,30 +19,31 @@ export class OrdersService {
     return this.ordersEntityRepository.findAndCount();
   }
 
-  public async callback(body: CallbackOrderDto) {
-    // const { data, signature } = body;
+  public async callback({ data, signature }: CallbackOrderDto) {
+    const LIQPAY_PRIVATE_KEY = this.configService.get('LIQPAY_PRIVATE_KEY');
 
-    console.log('body', body);
+    try {
+      const targetSignature = getSignature({
+        data,
+        privateKey: LIQPAY_PRIVATE_KEY,
+      });
 
-    // const LIQPAY_PUBLIC_KEY = this.configService.get('LIQPAY_PUBLIC_KEY');
+      if (signature !== targetSignature) {
+        throw new NotFoundException();
+      }
 
-    // if (LIQPAY_PUBLIC_KEY !== public_key) {
-    //   throw new UnauthorizedException();
-    // }
+      const { order_id, status } = getDataObjectFromDataString(data);
 
-    // const matchOrder = await this.ordersEntityRepository.findOneBy({
-    //   id: Number(order_id),
-    // });
+      await this.ordersEntityRepository.update(
+        { id: Number(order_id) },
+        { status }
+      );
 
-    // if (matchOrder) {
-    //   await this.ordersEntityRepository.update({ id: Number(order_id) }, { status });
-
-    //   return { ...matchOrder, status };
-    // }
-
-    // throw new NotFoundException();
-
-    return 'Callback';
+      return { id: Number(order_id), status };
+    } catch (error) {
+      console.error(error);
+      throw new NotFoundException();
+    }
   }
 
   public findOne(
