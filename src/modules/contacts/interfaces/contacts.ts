@@ -4,7 +4,7 @@ export interface IContact {
 }
 
 export interface IContacts {
-  vk: IContact;
+  email: IContact;
   discord: IContact;
   tg: IContact;
 }

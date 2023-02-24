@@ -1,10 +1,13 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity } from 'typeorm';
 
-import { IPermissionInheritance } from "./interfaces";
-import { IdDateBaseEntity } from "../../common/entity";
+import { IPermissionInheritance } from './interfaces';
+import { IdDateBaseEntity } from '../../common/entity';
 
 @Entity({ name: 'permissions_inheritance' })
-export class PermissionInheritanceEntity extends IdDateBaseEntity implements IPermissionInheritance {
+export class PermissionInheritanceEntity
+  extends IdDateBaseEntity
+  implements IPermissionInheritance
+{
   @Column({ type: 'varchar' })
   public child: string;
 

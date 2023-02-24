@@ -1,14 +1,14 @@
-import { HttpService } from "@nestjs/axios";
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { InjectRepository } from "@nestjs/typeorm";
-import { lastValueFrom } from "rxjs";
-import { Brackets, DeleteResult, FindOptionsWhere, Repository } from "typeorm";
-import { PermissionEntity } from "../permissions/permissions.entity";
-import { PermissionInheritanceEntity } from "../permissions/permissionInheritance.entity";
+import { HttpService } from '@nestjs/axios';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { lastValueFrom } from 'rxjs';
+import { Brackets, DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
+import { PermissionEntity } from '../permissions/permissions.entity';
+import { PermissionInheritanceEntity } from '../permissions/permissionInheritance.entity';
 
-import { PlayerEntity } from "./player.entity";
-import { IPlayerSearchDto } from "./interfaces";
+import { PlayerEntity } from './player.entity';
+import { IPlayerSearchDto } from './interfaces';
 
 @Injectable()
 export class PlayerService {
@@ -16,12 +16,15 @@ export class PlayerService {
     @InjectRepository(PlayerEntity)
     private readonly playersEntityRepository: Repository<PlayerEntity>,
     private readonly httpService: HttpService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
-  public async search(dto: IPlayerSearchDto): Promise<[Array<PlayerEntity>, number]> {
+  public async search(
+    dto: IPlayerSearchDto
+  ): Promise<[Array<PlayerEntity>, number]> {
     const { realname, username } = dto;
-    const queryBuilder = this.playersEntityRepository.createQueryBuilder("players");
+    const queryBuilder =
+      this.playersEntityRepository.createQueryBuilder('players');
 
     queryBuilder.select();
 
@@ -29,7 +32,7 @@ export class PlayerService {
       queryBuilder.andWhere(
         new Brackets((qb) => {
           qb.where(`players.realname LIKE '%${realname}%'`);
-        }),
+        })
       );
     }
 
@@ -37,12 +40,22 @@ export class PlayerService {
       queryBuilder.andWhere(
         new Brackets((qb) => {
           qb.where(`players.username LIKE '%${username}%'`);
-        }),
+        })
       );
     }
 
-    queryBuilder.leftJoinAndMapOne('players.permission', PermissionEntity, 'permission', 'players.realname = permission.value');
-    queryBuilder.leftJoinAndMapOne('permission.permissionInheritance', PermissionInheritanceEntity, 'permissionInheritance', 'permission.name = permissionInheritance.child');
+    queryBuilder.leftJoinAndMapOne(
+      'players.permission',
+      PermissionEntity,
+      'permission',
+      'players.realname = permission.value'
+    );
+    queryBuilder.leftJoinAndMapOne(
+      'permission.permissionInheritance',
+      PermissionInheritanceEntity,
+      'permissionInheritance',
+      'permission.name = permissionInheritance.child'
+    );
 
     //TODO Maybe use pagination & sort?
     // queryBuilder.orderBy(`players.${sortBy}`, sort.toUpperCase());
@@ -55,9 +68,11 @@ export class PlayerService {
     const MOJANG_API = this.configService.get('MOJANG_API');
     const MCHEAD_API = this.configService.get('MCHEAD_API');
 
-    const mappedPlayers = playersList[ 0 ].map(async (player) => {
+    const mappedPlayers = playersList[0].map(async (player) => {
       const { data } = await lastValueFrom(
-        this.httpService.get(`${MOJANG_API}/users/profiles/minecraft/${player.username}`),
+        this.httpService.get(
+          `${MOJANG_API}/users/profiles/minecraft/${player.username}`
+        )
       );
 
       const uuid: string = data.id;
@@ -74,10 +89,12 @@ export class PlayerService {
 
     const responseList = await Promise.all(mappedPlayers);
 
-    return [ responseList, playersList[ 1 ] ];
+    return [responseList, playersList[1]];
   }
 
-  public findOne(where: FindOptionsWhere<PlayerEntity>): Promise<PlayerEntity | null> {
+  public findOne(
+    where: FindOptionsWhere<PlayerEntity>
+  ): Promise<PlayerEntity | null> {
     return this.playersEntityRepository.findOne({ where });
   }
 

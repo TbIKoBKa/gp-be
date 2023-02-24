@@ -1,6 +1,10 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsString, IsNumber } from "class-validator";
-import { BuyPeriodType, CurrencyType } from "../../../common/types";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNumber } from 'class-validator';
+import {
+  BuyPeriodType,
+  CurrencyType,
+  LanguageType,
+} from '../../../common/types';
 
 import { IPermissionBuyDto } from '../interfaces';
 
@@ -19,4 +23,8 @@ export class PermissionBuyDto implements IPermissionBuyDto {
   @ApiProperty({ enum: CurrencyType, enumName: 'Currency' })
   @IsString()
   public currency: CurrencyType;
+
+  @ApiProperty({ enum: LanguageType, enumName: 'Language' })
+  @IsString()
+  public language: LanguageType;
 }

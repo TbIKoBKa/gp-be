@@ -1,1 +1,1 @@
-export * from "./idDateBaseEntity";
+export * from './idDateBaseEntity';

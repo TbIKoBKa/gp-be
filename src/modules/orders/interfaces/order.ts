@@ -1,6 +1,6 @@
-import { CurrencyType } from "../../../common/types";
+import { CurrencyType } from '../../../common/types';
 
-export interface IOrder{
+export interface IOrder {
   id: number;
   amount: number;
   currency: CurrencyType;
