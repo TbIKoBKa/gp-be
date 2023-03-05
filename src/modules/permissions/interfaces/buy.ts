@@ -12,6 +12,10 @@ export interface IPermissionBuyDto {
 }
 
 export interface IPermissionBuyResponseDto {
-  data: string;
-  signature: string;
+  data?: string;
+  signature?: string;
+  success?: boolean;
+  link_url?: string;
+  link_page_url?: string;
+  bill_id?: string;
 }
