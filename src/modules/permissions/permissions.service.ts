@@ -94,6 +94,17 @@ export class PermissionsService {
             nickname,
             period,
             permission_id: matchOne.id,
+            ik_meta:
+              currency !== CurrencyType.RUB
+                ? {
+                    ik_co_id: INTERKASSA_CHECKOUT_ID,
+                    ik_cur: currency,
+                    ik_am: targetPrice,
+                    ik_desc:
+                      matchOne.name[0].toUpperCase() + matchOne.name.slice(1),
+                    ik_products: String(matchOne.id),
+                  }
+                : void 0,
           },
         })
         .save();
@@ -124,35 +135,9 @@ export class PermissionsService {
             )
         );
       } else {
-        return lastValueFrom(
-          this.httpService
-            .post(
-              'https://sci.interkassa.com',
-              {
-                // ik_sign: INTERKASSA_SIGN_KEY,
-                ik_co_id: INTERKASSA_CHECKOUT_ID,
-                ik_pm_no: String(createdOrder.id),
-                ik_cur: currency,
-                ik_am: targetPrice,
-                ik_desc:
-                  matchOne.name[0].toUpperCase() + matchOne.name.slice(1),
-                ik_products: String(matchOne.id),
-              },
-              {
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                },
-              }
-            )
-            .pipe(
-              map((res) => res.data),
-              catchError((error: AxiosError) => {
-                console.error(error.response?.data);
-                console.error(error.response?.status);
-                throw 'An error happened!';
-              })
-            )
-        );
+        return {
+          createdOrder,
+        };
         // const json = {
         //   version: 3,
         //   public_key: LIQPAY_PUBLIC_KEY,
