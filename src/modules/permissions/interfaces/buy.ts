@@ -3,6 +3,7 @@ import {
   CurrencyType,
   LanguageType,
 } from '../../../common/types';
+import { OrderEntity } from '../../orders/orders.entity';
 
 export interface IPermissionBuyDto {
   nickname: string;
@@ -18,4 +19,5 @@ export interface IPermissionBuyResponseDto {
   link_url?: string;
   link_page_url?: string;
   bill_id?: string;
+  createdOrder: OrderEntity;
 }
