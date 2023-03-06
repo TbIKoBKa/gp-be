@@ -135,9 +135,47 @@ export class PermissionsService {
             )
         );
       } else {
-        return {
-          createdOrder,
-        };
+        return lastValueFrom(
+          this.httpService
+            .post(
+              'https://sci.interkassa.com',
+              {
+                ik_co_id: INTERKASSA_CHECKOUT_ID,
+                ik_pm_no: String(createdOrder.id),
+                ik_cur: currency,
+                ik_am: targetPrice,
+                ik_desc:
+                  matchOne.name[0].toUpperCase() + matchOne.name.slice(1),
+                ik_products: String(matchOne.id),
+                ik_int: 'json',
+                ik_act: 'process',
+                ik_mode: 'invoice',
+                ik_payment_currency: 'XTS',
+                ik_payment_method: 'test',
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                },
+              }
+            )
+            .pipe(
+              map(
+                ({
+                  data: {
+                    resultData: {
+                      paymentForm: { action },
+                    },
+                  },
+                }) => ({ link_page_url: action })
+              ),
+              catchError((error: AxiosError) => {
+                console.error(error.response?.data);
+                console.error(error.response?.status);
+                throw 'An error happened!';
+              })
+            )
+        );
         // const json = {
         //   version: 3,
         //   public_key: LIQPAY_PUBLIC_KEY,

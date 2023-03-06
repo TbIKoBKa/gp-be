@@ -5,7 +5,6 @@ import { DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
 
 import { OrderEntity } from './orders.entity';
 import { CallbackOrderDto } from './dto';
-import { getDataObjectFromDataString, getSignature } from '../../utils/liqpay';
 
 @Injectable()
 export class OrdersService {
@@ -19,27 +18,29 @@ export class OrdersService {
     return this.ordersEntityRepository.findAndCount();
   }
 
-  public async callback({ data, signature }: CallbackOrderDto) {
-    const LIQPAY_PRIVATE_KEY = this.configService.get('LIQPAY_PRIVATE_KEY');
+  public async callback(data: CallbackOrderDto) {
+    // const LIQPAY_PRIVATE_KEY = this.configService.get('LIQPAY_PRIVATE_KEY');
 
     try {
-      const targetSignature = getSignature({
-        data,
-        privateKey: LIQPAY_PRIVATE_KEY,
-      });
+      // const targetSignature = getSignature({
+      //   data,
+      //   privateKey: LIQPAY_PRIVATE_KEY,
+      // });
 
-      if (signature !== targetSignature) {
-        throw new NotFoundException();
-      }
+      // if (signature !== targetSignature) {
+      //   throw new NotFoundException();
+      // }
 
-      const { order_id, status } = getDataObjectFromDataString(data);
+      // const { order_id, status } = getDataObjectFromDataString(data);
 
-      await this.ordersEntityRepository.update(
-        { id: Number(order_id) },
-        { status }
-      );
+      // await this.ordersEntityRepository.update(
+      //   { id: Number(order_id) },
+      //   { status }
+      // );
 
-      return { id: Number(order_id), status };
+      console.log('received data', data);
+
+      return data;
     } catch (error) {
       console.error(error);
       throw new NotFoundException();
