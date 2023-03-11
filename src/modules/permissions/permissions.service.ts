@@ -119,6 +119,10 @@ export class PermissionsService {
                 order_id: String(createdOrder.id),
                 name: matchOne.name[0].toUpperCase() + matchOne.name.slice(1),
                 shop_id: PP_SHOP_ID,
+                custom: JSON.stringify({
+                  nickname,
+                  permissionName: matchOne.name,
+                }),
               },
               {
                 headers: {
@@ -152,6 +156,7 @@ export class PermissionsService {
                 ik_mode: 'invoice',
                 ik_payment_currency: 'XTS',
                 ik_payment_method: 'test',
+                ik_x_nickname: nickname,
               },
               {
                 headers: {
