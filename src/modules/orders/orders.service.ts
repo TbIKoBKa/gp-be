@@ -72,6 +72,9 @@ export class OrdersService {
           .digest('hex')
           .toUpperCase();
 
+        console.log('hash', hash);
+        console.log('SignatureValue', SignatureValue);
+
         if (hash === SignatureValue) {
           const { nickname, permissionName } = JSON.parse(custom);
 
