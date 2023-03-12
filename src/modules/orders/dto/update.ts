@@ -54,10 +54,10 @@ export class CallbackOrderDto implements ICallbackOrderDto {
   @IsOptional()
   public ik_payment_currency?: string;
 
-  @ApiProperty({ type: 'number' })
-  @IsNumber()
+  @ApiProperty({ type: 'string' })
+  @IsString()
   @IsOptional()
-  public ik_am?: number;
+  public ik_am?: string;
 
   @ApiProperty({ type: 'string' })
   @IsString()

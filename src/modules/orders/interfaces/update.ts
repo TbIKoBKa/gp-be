@@ -11,7 +11,7 @@ export interface ICallbackOrderDto {
   ik_desc?: string;
   ik_payment_method?: string;
   ik_payment_currency?: string;
-  ik_am?: number;
+  ik_am?: string;
   ik_cur?: string;
   ik_act?: string;
   ik_x_nickname?: string;
