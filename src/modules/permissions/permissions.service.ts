@@ -175,8 +175,7 @@ export class PermissionsService {
                 }) => ({ link_page_url: action })
               ),
               catchError((error: AxiosError) => {
-                console.error(error.response?.data);
-                console.error(error.response?.status);
+                console.error(error);
                 throw 'An error happened!';
               })
             )
