@@ -147,7 +147,7 @@ export class PermissionsService {
                 ik_co_id: INTERKASSA_CHECKOUT_ID,
                 ik_pm_no: String(createdOrder.id),
                 ik_cur: currency,
-                ik_am: targetPrice,
+                ik_am: 1, // Mocked price
                 ik_desc:
                   matchOne.name[0].toUpperCase() + matchOne.name.slice(1),
                 ik_products: String(matchOne.id),
