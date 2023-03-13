@@ -127,26 +127,22 @@ export class OrdersService {
 
     if (status === 'success') {
       promises.push(
-        this.permissionInheritanceEntityRepository.update(
+        this.permissionInheritanceEntityRepository.upsert(
           {
             child: uid,
-          },
-          {
-            child: uid,
-            parent: permissionName,
+            parent: permissionName.toLowerCase(),
             type: 1,
-          }
-        ),
-        this.permissionEntityRepository.update(
-          {
-            name: uid,
           },
+          ['child']
+        ),
+        this.permissionEntityRepository.upsert(
           {
             name: uid,
             type: 1,
             permission: 'name',
             value: nickname,
-          }
+          },
+          ['name']
         )
       );
     }
