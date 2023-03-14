@@ -2,7 +2,6 @@ import { ConfigService } from '@nestjs/config';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
-import { v4 } from 'uuid';
 import crypto from 'crypto';
 
 import { CallbackOrderDto } from './dto';
@@ -112,39 +111,41 @@ export class OrdersService {
     permissionName,
     status = 'success',
   }: ICompleteOrderDto) {
-    const uid =
-      (
-        await this.permissionEntityRepository.findOne({
-          where: {
-            value: nickname,
-          },
-        })
-      )?.name || v4();
+    const existingUid = (
+      await this.permissionEntityRepository.findOne({
+        where: {
+          value: nickname,
+        },
+      })
+    )?.name;
 
     const promises = [
       this.ordersEntityRepository.update({ id: order_id }, { status }),
     ];
 
-    if (status === 'success') {
+    if (existingUid && status === 'success') {
       promises.push(
         this.permissionInheritanceEntityRepository.upsert(
           {
-            child: uid,
+            child: existingUid,
             parent: permissionName.toLowerCase(),
             type: 1,
           },
           ['child']
-        ),
-        this.permissionEntityRepository.upsert(
-          {
-            name: uid,
+        )
+      );
+
+      if (!existingUid) {
+        promises.push(
+          this.permissionEntityRepository.insert({
+            name: existingUid,
             type: 1,
             permission: 'name',
             value: nickname,
-          },
-          ['name']
-        )
-      );
+            world: '',
+          })
+        );
+      }
     }
 
     await Promise.all(promises);

@@ -1,9 +1,10 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Unique } from 'typeorm';
 
 import { IPermissionInheritance } from './interfaces';
 import { IdDateBaseEntity } from '../../common/entity';
 
 @Entity({ name: 'permissions_inheritance' })
+@Unique(['child'])
 export class PermissionInheritanceEntity
   extends IdDateBaseEntity
   implements IPermissionInheritance
