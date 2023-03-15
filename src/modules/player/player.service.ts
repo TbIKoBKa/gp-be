@@ -69,13 +69,16 @@ export class PlayerService {
     const MCHEAD_API = this.configService.get('MCHEAD_API');
 
     const mappedPlayers = playersList[0].map(async (player) => {
-      const { data } = await lastValueFrom(
+      const response = await lastValueFrom(
         this.httpService.get(
           `${MOJANG_API}/users/profiles/minecraft/${player.username}`
         )
-      );
+      ).catch((err) => {
+        console.error(err);
+      });
 
-      const uuid: string = data.id;
+      const uuid: string =
+        response?.data?.id || 'f680df9bac5c4d3f9bac75bc0e316afa';
 
       const avatar = `${MCHEAD_API}/avatar/${uuid}`;
       const fullbody = `${MCHEAD_API}/player/${uuid}`;

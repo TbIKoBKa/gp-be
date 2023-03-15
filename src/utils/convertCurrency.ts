@@ -1,14 +1,17 @@
-import CC from 'currency-converter-lt';
+import axios, { AxiosResponse } from 'axios';
 
 export const convertCurrency = async (
   from: string,
   to: string,
-  amount: number,
-  isDecimalComma: boolean
+  amount: number
 ): Promise<number> => {
-  const converter = new CC({ from, to, amount, isDecimalComma });
+  if (from.includes(to)) {
+    return amount;
+  }
 
-  return converter.convert().then((response: number) => {
-    return Math.round(response * 100) / 100;
-  });
+  return axios
+    .get(`https://api.binance.com/api/v3/ticker/price?symbol=${from}${to}`)
+    .then((response: AxiosResponse) => {
+      return Math.round(+response.data.price * amount);
+    });
 };
