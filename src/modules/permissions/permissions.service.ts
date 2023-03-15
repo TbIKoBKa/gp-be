@@ -28,7 +28,7 @@ export class PermissionsService {
     private readonly httpService: HttpService
   ) {}
 
-  public async search(): Promise<IPermissionEntity[]> {
+  public async search(currency: CurrencyType): Promise<IPermissionEntity[]> {
     const queryBuilder =
       this.permissionEntityEntityRepository.createQueryBuilder(
         'permissions_entity'
@@ -36,15 +36,24 @@ export class PermissionsService {
 
     queryBuilder.select();
 
+    queryBuilder.orderBy('price_forever', 'ASC');
+
     const permissions = await queryBuilder.getMany();
 
-    const filteredPermissions = totalPermissions
-      .map((permission) => {
-        return permissions.find((item) => item.name === permission);
-      })
-      .filter((item) => item);
+    const filteredPermissions = permissions
+      .filter((item) => totalPermissions.includes(item.name))
+      .map(async (item) => {
+        return {
+          ...item,
+          price_forever: await convertCurrency(
+            'USDT',
+            currency,
+            item.price_forever
+          ),
+        };
+      });
 
-    return filteredPermissions as unknown as PermissionEntityEntity[];
+    return await Promise.all(filteredPermissions);
   }
 
   public async buy(
@@ -75,15 +84,7 @@ export class PermissionsService {
           ? matchOne.price_month
           : matchOne.price_forever;
 
-      const targetPrice =
-        currency === CurrencyType.RUB
-          ? periodPrice
-          : await convertCurrency(
-              'RUB',
-              currency,
-              periodPrice,
-              this.configService.get('NODE_ENV') !== 'development'
-            );
+      const targetPrice = await convertCurrency('USDT', currency, periodPrice);
 
       const createdOrder = await this.orderEntityRepository
         .create({
