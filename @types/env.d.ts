@@ -15,6 +15,10 @@ declare global {
       LIQPAY_PUBLIC_KEY: string;
       LIQPAY_PRIVATE_KEY: string;
       LIQPAY_SERVER_URL: string;
+      INTERKASSA_CHECKOUT_ID: string;
+      INTERKASSA_SIGN_KEY: string;
+      PP_TOKEN: string;
+      PP_SHOP_ID: string;
     }
   }
 }
