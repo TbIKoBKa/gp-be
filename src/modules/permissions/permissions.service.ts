@@ -28,7 +28,7 @@ export class PermissionsService {
     private readonly httpService: HttpService
   ) {}
 
-  public async search(currency: CurrencyType): Promise<IPermissionEntity[]> {
+  public async search(): Promise<IPermissionEntity[]> {
     const queryBuilder =
       this.permissionEntityEntityRepository.createQueryBuilder(
         'permissions_entity'
@@ -40,18 +40,9 @@ export class PermissionsService {
 
     const permissions = await queryBuilder.getMany();
 
-    const filteredPermissions = permissions
-      .filter((item) => totalPermissions.includes(item.name))
-      .map(async (item) => {
-        return {
-          ...item,
-          price_forever: await convertCurrency(
-            'USDT',
-            currency,
-            item.price_forever
-          ),
-        };
-      });
+    const filteredPermissions = permissions.filter((item) =>
+      totalPermissions.includes(item.name)
+    );
 
     return await Promise.all(filteredPermissions);
   }
