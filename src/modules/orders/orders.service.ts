@@ -1,49 +1,168 @@
 import { ConfigService } from '@nestjs/config';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
-import crypto from 'crypto';
+import axios, { AxiosResponse } from 'axios';
 
-import { CallbackOrderDto } from './dto';
+import { BuyDto, CompleteOrderDto, GetClientTokenDto } from './dto';
 import { OrderEntity } from './orders.entity';
-import { PermissionInheritanceEntity } from '../permissions/permissionInheritance.entity';
-import { PermissionEntity } from '../permissions/permissions.entity';
-import { ICompleteOrderDto } from './interfaces/completeOrder';
+import { RconService } from '../rcon/rcon.service';
+import { PermissionEntityEntity } from '../permissions/permissionEntity.entity';
+import { BuyPeriodType } from '../../common/types';
+import { convertCurrency } from '../../utils/convertCurrency';
+import { ProductEntity } from '../products/entities/product.entity';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(OrderEntity)
     private readonly ordersEntityRepository: Repository<OrderEntity>,
-    @InjectRepository(PermissionInheritanceEntity)
-    private readonly permissionInheritanceEntityRepository: Repository<PermissionInheritanceEntity>,
-    @InjectRepository(PermissionEntity)
-    private readonly permissionEntityRepository: Repository<PermissionEntity>,
-    private readonly configService: ConfigService
+    @InjectRepository(PermissionEntityEntity)
+    private readonly permissionEntityEntityRepository: Repository<PermissionEntityEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly productEntityRepository: Repository<ProductEntity>,
+    private readonly configService: ConfigService,
+    private readonly rcon: RconService
   ) {}
+
+  private readonly PP_URL = this.configService.get('PP_URL');
+  private readonly PP_CLIENT_ID = this.configService.get('PP_CLIENT_ID');
+  private readonly PP_SECRET = this.configService.get('PP_SECRET');
 
   public async search(): Promise<[Array<OrderEntity>, number]> {
     return this.ordersEntityRepository.findAndCount();
   }
 
-  public async callback(data: CallbackOrderDto) {
-    const {
-      InvId,
-      OutSum,
-      SignatureValue,
-      custom,
-      ik_co_id,
-      ik_desc,
-      ik_x_nickname,
-      ik_pm_no,
-      ik_inv_st,
-    } = data;
+  public async buy(id: number, body: BuyDto): Promise<OrderEntity> {
+    const { currency, period, nickname, args, language, orderId } = body;
 
+    const matchOne = await this.productEntityRepository.findOneBy({
+      id,
+    });
+
+    if (matchOne) {
+      // const LIQPAY_PUBLIC_KEY = this.configService.get('LIQPAY_PUBLIC_KEY');
+      // const LIQPAY_PRIVATE_KEY = this.configService.get('LIQPAY_PRIVATE_KEY');
+      // const LIQPAY_SERVER_URL = this.configService.get('LIQPAY_SERVER_URL');
+
+      const periodPrice =
+        period === BuyPeriodType.MONTH
+          ? matchOne.price_month
+          : matchOne.price_forever;
+
+      const targetPrice = await convertCurrency('USDT', currency, periodPrice);
+
+      const createdOrder = await this.ordersEntityRepository
+        .create({
+          amount: targetPrice,
+          currency,
+          status: 'pending',
+          external_id: orderId,
+          meta: {
+            product_id: matchOne.id,
+            nickname,
+            period,
+            language,
+            args,
+          },
+        })
+        .save();
+
+      // const json = {
+      //   version: 3,
+      //   public_key: LIQPAY_PUBLIC_KEY,
+      //   private_key: LIQPAY_PRIVATE_KEY,
+      //   action: 'pay',
+      //   amount: targetPrice,
+      //   currency,
+      //   description: matchOne.name[0].toUpperCase() + matchOne.name.slice(1),
+      //   order_id: String(createdOrder.id),
+      //   product_name: matchOne.name,
+      //   server_url: LIQPAY_SERVER_URL,
+      //   language,
+      //   info: JSON.stringify({
+      //     nickname,
+      //     period,
+      //     permission_id: matchOne.id,
+      //   }),
+      // };
+      // const data = getDataStringFromDataObject(json);
+      // const signature = getSignature({
+      //   data,
+      //   privateKey: LIQPAY_PRIVATE_KEY,
+      // });
+      // return { data, signature };
+
+      return createdOrder;
+    }
+
+    throw new NotFoundException();
+  }
+
+  public async completeOrder({ order_id }: CompleteOrderDto) {
+    const matchOne = await this.ordersEntityRepository.findOne({
+      where: {
+        external_id: order_id,
+      },
+    });
+
+    if (matchOne) {
+      try {
+        this.ordersEntityRepository.update(
+          { id: matchOne.id },
+          { status: 'success' }
+        );
+
+        const args: string[] = matchOne.meta.args;
+        const product_id: number = matchOne.meta.product_id;
+
+        const product = await this.productEntityRepository.findOneBy({
+          id: product_id,
+        });
+
+        if (product) {
+          const command = args.reduce(
+            (c, a, i) => c.replaceAll(`{${i}}`, a),
+            product?.command
+          );
+
+          console.log(command);
+
+          await this.rcon.sendCommandClassic(command);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }
+
+  public async getClientToken({ customer_id }: GetClientTokenDto) {
+    try {
+      const accessToken = await this.getAccessToken();
+
+      const payload = customer_id ? JSON.stringify({ customer_id }) : null;
+
+      const response: AxiosResponse<{ client_token: string }> =
+        await axios.post(this.PP_URL + '/v1/identity/generate-token', payload, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+      return response.data.client_token;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  public async callback() {
     // const LIQPAY_PRIVATE_KEY = this.configService.get('LIQPAY_PRIVATE_KEY');
-    const PP_TOKEN = this.configService.get('PP_TOKEN');
-    const INTERKASSA_CHECKOUT_ID = this.configService.get(
-      'INTERKASSA_CHECKOUT_ID'
-    );
 
     try {
       // const targetSignature = getSignature({
@@ -62,93 +181,11 @@ export class OrdersService {
       //   { status }
       // );
 
-      console.log('received data', data);
-
-      if (InvId && OutSum && PP_TOKEN && custom) {
-        const hash = crypto
-          .createHash('md5')
-          .update(`${OutSum}:${InvId}:${PP_TOKEN}`)
-          .digest('hex')
-          .toUpperCase();
-
-        console.log('hash', hash);
-        console.log('SignatureValue', SignatureValue);
-
-        if (hash === SignatureValue) {
-          const { nickname, permissionName } = JSON.parse(custom);
-
-          await this.completeOrder({
-            order_id: Number(InvId),
-            nickname,
-            permissionName,
-          });
-
-          return { id: InvId, status: 'success' };
-        }
-      } else if (ik_co_id && ik_desc && ik_x_nickname && ik_pm_no) {
-        if (ik_co_id === INTERKASSA_CHECKOUT_ID) {
-          await this.completeOrder({
-            order_id: Number(ik_pm_no),
-            nickname: ik_x_nickname,
-            permissionName: ik_desc,
-            status: ik_inv_st,
-          });
-
-          return { id: ik_pm_no, status: ik_inv_st };
-        }
-      }
-
       throw new NotFoundException();
     } catch (error) {
       console.error(error);
       throw new NotFoundException();
     }
-  }
-
-  private async completeOrder({
-    nickname,
-    order_id,
-    permissionName,
-    status = 'success',
-  }: ICompleteOrderDto) {
-    const existingUid = (
-      await this.permissionEntityRepository.findOne({
-        where: {
-          value: nickname,
-        },
-      })
-    )?.name;
-
-    const promises = [
-      this.ordersEntityRepository.update({ id: order_id }, { status }),
-    ];
-
-    if (existingUid && status === 'success') {
-      promises.push(
-        this.permissionInheritanceEntityRepository.upsert(
-          {
-            child: existingUid,
-            parent: permissionName.toLowerCase(),
-            type: 1,
-          },
-          ['child']
-        )
-      );
-
-      if (!existingUid) {
-        promises.push(
-          this.permissionEntityRepository.insert({
-            name: existingUid,
-            type: 1,
-            permission: 'name',
-            value: nickname,
-            world: '',
-          })
-        );
-      }
-    }
-
-    await Promise.all(promises);
   }
 
   public findOne(
@@ -160,4 +197,20 @@ export class OrdersService {
   public delete(where: FindOptionsWhere<OrderEntity>): Promise<DeleteResult> {
     return this.ordersEntityRepository.delete(where);
   }
+
+  private getAccessToken = async () => {
+    const auth = `${this.PP_CLIENT_ID}:${this.PP_SECRET}`;
+    const data = 'grant_type=client_credentials';
+    const response: AxiosResponse<{ access_token: string }> = await axios.post(
+      this.PP_URL + '/v1/oauth2/token',
+      data,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${Buffer.from(auth).toString('base64')}`,
+        },
+      }
+    );
+    return response.data.access_token;
+  };
 }

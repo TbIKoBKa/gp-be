@@ -1,33 +1,32 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  HttpCode,
-  HttpStatus,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Post, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { OrdersService } from './orders.service';
-import { OrderEntity } from './orders.entity';
-import { PaginationInterceptor } from '../../utils';
-import { CallbackOrderDto } from './dto';
+import { BuyDto, CompleteOrderDto, GetClientTokenDto } from './dto';
 
 @ApiTags('orders')
 @Controller('/orders')
 export class OrdersController {
   constructor(private readonly orderService: OrdersService) {}
 
-  @Get('/')
-  @UseInterceptors(PaginationInterceptor)
-  public search(): Promise<[Array<OrderEntity>, number]> {
-    return this.orderService.search();
+  // @Get('/')
+  // @UseInterceptors(PaginationInterceptor)
+  // public search(): Promise<[Array<OrderEntity>, number]> {
+  //   return this.orderService.search();
+  // }
+
+  @Post('/buy/:id')
+  public buy(@Param('id') id: number, @Body() body: BuyDto) {
+    return this.orderService.buy(id, body);
   }
 
-  @Post('/callback')
-  @HttpCode(HttpStatus.OK)
-  public callback(@Body() body: CallbackOrderDto) {
-    return this.orderService.callback(body);
+  @Post('/complete-order')
+  public completeOrder(@Body() body: CompleteOrderDto) {
+    return this.orderService.completeOrder(body);
+  }
+
+  @Post('/get-client-token')
+  public getClientToken(@Body() body: GetClientTokenDto) {
+    return this.orderService.getClientToken(body);
   }
 }
