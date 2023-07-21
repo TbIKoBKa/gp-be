@@ -8,6 +8,7 @@ import { PermissionEntity } from '../modules/permissions/permissions.entity';
 import { PermissionInheritanceEntity } from '../modules/permissions/permissionInheritance.entity';
 import { PermissionEntityEntity } from '../modules/permissions/permissionEntity.entity';
 import { OrderEntity } from '../modules/orders/orders.entity';
+import { ProductEntity } from '../modules/products/entities/product.entity';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -29,6 +30,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         PermissionInheritanceEntity,
         PermissionEntityEntity,
         OrderEntity,
+        ProductEntity,
       ],
     };
   }
