@@ -11,10 +11,12 @@ import { PlayerModule } from './modules/player/player.module';
 import { ContactsModule } from './modules/contacts/contacts.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { RconModule } from './modules/rcon/rcon.module';
 
 import { AppController } from './app.controller';
 import { TypeOrmConfigService } from './config';
 import { HttpExceptionFilter } from './utils';
+import { ProductsModule } from './modules/products/products.module';
 
 @Module({
   providers: [
@@ -77,6 +79,8 @@ import { HttpExceptionFilter } from './utils';
     ContactsModule,
     PermissionsModule,
     OrdersModule,
+    RconModule,
+    ProductsModule,
   ],
   controllers: [AppController],
 })

@@ -1,4 +1,4 @@
 export enum BuyPeriodType {
-  MONTH = 1,
-  FOREVER = 2,
+  MONTH = 'MONTH',
+  FOREVER = 'FOREVER',
 }

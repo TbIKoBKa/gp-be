@@ -61,7 +61,7 @@ export class PlayerService {
     // queryBuilder.orderBy(`players.${sortBy}`, sort.toUpperCase());
 
     // queryBuilder.skip(skip);
-    // queryBuilder.take(take);
+    queryBuilder.take(20);
 
     const playersList = await queryBuilder.getManyAndCount();
 

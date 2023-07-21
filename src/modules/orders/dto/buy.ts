@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber } from 'class-validator';
+import { IsString, IsNumber, IsArray } from 'class-validator';
 import {
   BuyPeriodType,
   CurrencyType,
   LanguageType,
 } from '../../../common/types';
 
-import { IPermissionBuyDto } from '../interfaces';
+import { IBuyDto } from '../interfaces';
 
-export class PermissionBuyDto implements IPermissionBuyDto {
+export class BuyDto implements IBuyDto {
   @IsString()
   @ApiProperty({ type: 'string' })
   @IsString({
@@ -16,8 +16,8 @@ export class PermissionBuyDto implements IPermissionBuyDto {
   })
   public nickname: string;
 
-  @ApiProperty({ type: 'number' })
-  @IsNumber()
+  @ApiProperty({ type: 'string' })
+  @IsString()
   public period: BuyPeriodType;
 
   @ApiProperty({ enum: CurrencyType, enumName: 'Currency' })
@@ -27,4 +27,15 @@ export class PermissionBuyDto implements IPermissionBuyDto {
   @ApiProperty({ enum: LanguageType, enumName: 'Language' })
   @IsString()
   public language: LanguageType;
+
+  @ApiProperty({ type: 'array' })
+  @IsArray()
+  public args: (string | number)[];
+
+  @IsString()
+  @ApiProperty({ type: 'string' })
+  @IsString({
+    message: 'Value should be string',
+  })
+  public orderId: string;
 }
