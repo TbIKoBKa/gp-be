@@ -8,6 +8,9 @@ services:
       HOST: ${HOST}
       PORT: ${PORT}
       FE_URL: ${FE_URL}
+      BUNGEE_HOST: ${BUNGEE_HOST}
+      BUNGEE_PORT: ${BUNGEE_PORT}
+      BUNGEE_PASSWORD: ${BUNGEE_PASSWORD}
       MYSQL_HOST: ${MYSQL_HOST}
       MYSQL_PORT: ${MYSQL_PORT}
       MYSQL_NAME: ${MYSQL_NAME}
