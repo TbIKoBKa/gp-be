@@ -23,4 +23,7 @@ export class OrderEntity extends IdDateBaseEntity implements IOrder {
 
   @Column({ type: 'datetime' })
   public created_at: string;
+
+  @Column({ type: 'varchar' })
+  public external_id: string;
 }
