@@ -5,8 +5,6 @@ import crypto from 'crypto';
 import { VoteHandlerDto } from './dto/vote-handler.dto';
 import { RconService } from '../rcon/rcon.service';
 
-const shasum = crypto.createHash('sha1');
-
 @Injectable()
 export class VoteHandlerService {
   constructor(
@@ -18,9 +16,14 @@ export class VoteHandlerService {
     this.configService.get('HOTMC_SECRET_KEY');
 
   async handler({ nick, sign, time }: VoteHandlerDto) {
+    const shasum = crypto.createHash('sha1');
     shasum.update(nick + time + this.HOTMC_SECRET_KEY);
     const sha1 = shasum.digest('hex');
 
+    console.log(
+      '🚀 ~ file: vote-handler.service.ts:21 ~ VoteHandlerService ~ handler ~ this.HOTMC_SECRET_KEY:',
+      this.HOTMC_SECRET_KEY
+    );
     console.log(
       '🚀 ~ file: vote-handler.service.ts:25 ~ VoteHandlerService ~ handler ~ sha1:',
       sha1
