@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsArray } from 'class-validator';
+import { IsString, IsArray } from 'class-validator';
 import {
   BuyPeriodType,
   CurrencyType,
