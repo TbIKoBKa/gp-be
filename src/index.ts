@@ -31,8 +31,9 @@ async function bootstrap(): Promise<void> {
             'http://localhost:3000',
             'http://127.0.0.1:3000',
             'http://0.0.0.0:3000',
+            '116.203.225.67',
           ]
-        : [baseUrl],
+        : [baseUrl, '116.203.225.67'],
     credentials: true,
     exposedHeaders: ['Content-Disposition'],
   });
