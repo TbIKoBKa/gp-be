@@ -1,4 +1,4 @@
-import { Logger, Module } from '@nestjs/common';
+import { CacheModule, Logger, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
@@ -8,7 +8,12 @@ import { PlayerController } from './player.controller';
 import { PlayerEntity } from './player.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PlayerEntity]), ConfigModule, HttpModule],
+  imports: [
+    TypeOrmModule.forFeature([PlayerEntity]),
+    ConfigModule,
+    HttpModule,
+    CacheModule.register(),
+  ],
   providers: [Logger, PlayerService],
   controllers: [PlayerController],
   exports: [PlayerService],

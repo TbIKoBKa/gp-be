@@ -18,6 +18,7 @@ import { TypeOrmConfigService } from './config';
 import { HttpExceptionFilter } from './utils';
 import { ProductsModule } from './modules/products/products.module';
 import { VoteHandlerModule } from './modules/vote-handler/vote-handler.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   providers: [
@@ -83,6 +84,7 @@ import { VoteHandlerModule } from './modules/vote-handler/vote-handler.module';
     RconModule,
     ProductsModule,
     VoteHandlerModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
 })

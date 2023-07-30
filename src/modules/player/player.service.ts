@@ -22,24 +22,16 @@ export class PlayerService {
   public async search(
     dto: IPlayerSearchDto
   ): Promise<[Array<PlayerEntity>, number]> {
-    const { realname, username } = dto;
+    const { nickname } = dto;
     const queryBuilder =
       this.playersEntityRepository.createQueryBuilder('players');
 
     queryBuilder.select();
 
-    if (realname) {
+    if (nickname) {
       queryBuilder.andWhere(
         new Brackets((qb) => {
-          qb.where(`players.realname LIKE '%${realname}%'`);
-        })
-      );
-    }
-
-    if (username) {
-      queryBuilder.andWhere(
-        new Brackets((qb) => {
-          qb.where(`players.username LIKE '%${username}%'`);
+          qb.where(`players.username LIKE '%${nickname.toLowerCase()}%'`);
         })
       );
     }
@@ -73,9 +65,7 @@ export class PlayerService {
         this.httpService.get(
           `${MOJANG_API}/users/profiles/minecraft/${player.username}`
         )
-      ).catch((err) => {
-        console.error(err);
-      });
+      ).catch(() => {});
 
       const uuid: string =
         response?.data?.id || 'f680df9bac5c4d3f9bac75bc0e316afa';

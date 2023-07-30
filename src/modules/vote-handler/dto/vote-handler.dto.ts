@@ -1,16 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+// import { IsNumber, IsString } from 'class-validator';
 
 export class VoteHandlerDto {
   @ApiProperty({ type: 'string' })
-  @IsString()
+  // @IsString()
   nick: string;
 
   @ApiProperty({ type: 'number' })
-  @IsNumber()
+  // @IsNumber()
   time: number;
 
   @ApiProperty({ type: 'string' })
-  @IsString()
+  // @IsString()
   sign: string;
 }

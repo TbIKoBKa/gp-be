@@ -9,7 +9,6 @@ import {
 import { IBuyDto } from '../interfaces';
 
 export class BuyDto implements IBuyDto {
-  @IsString()
   @ApiProperty({ type: 'string' })
   @IsString({
     message: 'Value should be string',

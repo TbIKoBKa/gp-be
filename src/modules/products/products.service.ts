@@ -1,25 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ProductEntity } from './entities/product.entity';
-import { Repository } from 'typeorm';
+import axios from 'axios';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ProductsService {
-  constructor(
-    @InjectRepository(ProductEntity)
-    private readonly productEntityRepository: Repository<ProductEntity>
-  ) {}
+  constructor(private configService: ConfigService) {}
+
+  private api = axios.create({
+    baseURL: 'https://easydonate.ru/api/v3/shop',
+    headers: {
+      'Shop-Key': this.configService.get('EASYDONATE_SHOP_KEY'),
+    },
+  });
 
   // create(createProductDto: CreateProductDto) {
   //   return 'This action adds a new product';
   // }
 
-  findAll() {
-    return this.productEntityRepository.find();
+  async findAll() {
+    const res = await this.api.get('products');
+
+    return res.data.response;
   }
 
-  findOne(id: number) {
-    return this.productEntityRepository.findOneBy({ id });
+  async findOne(id: number) {
+    const res = await this.api.get(`products/${id}`);
+
+    return res.data.response;
   }
 
   // update(id: number, updateProductDto: UpdateProductDto) {

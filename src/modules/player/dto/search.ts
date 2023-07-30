@@ -9,12 +9,5 @@ export class PlayerSearchDto implements IPlayerSearchDto {
   @IsString({
     message: 'Value should be string',
   })
-  public username: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString({
-    message: 'Value should be string',
-  })
-  public realname: string;
+  public nickname: string;
 }
