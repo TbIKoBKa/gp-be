@@ -1,5 +1,3 @@
-import { IPermission } from '../../permissions/interfaces';
-
 export interface IPlayer {
   id: number;
   username: string;
@@ -19,8 +17,4 @@ export interface IPlayer {
   isLogged: number;
   hasSession: number;
   totp: string | number;
-  avatar: string;
-  fullbody: string;
-  uuid: string;
-  permission?: IPermission;
 }

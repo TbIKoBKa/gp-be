@@ -19,6 +19,7 @@ import { HttpExceptionFilter } from './utils';
 import { ProductsModule } from './modules/products/products.module';
 import { VoteHandlerModule } from './modules/vote-handler/vote-handler.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   providers: [
@@ -85,6 +86,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     ProductsModule,
     VoteHandlerModule,
     PaymentsModule,
+    AuthModule,
   ],
   controllers: [AppController],
 })

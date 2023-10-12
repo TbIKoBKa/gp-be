@@ -25,4 +25,9 @@ export class PlayerController {
   ): Promise<[Array<PlayerEntity>, number]> {
     return this.playerService.search(dto);
   }
+
+  @Get('/random')
+  public getRandom() {
+    return this.playerService.getRandom();
+  }
 }

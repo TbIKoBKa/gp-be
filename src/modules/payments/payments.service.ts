@@ -34,4 +34,11 @@ export class PaymentsService {
 
     return res?.data.response;
   }
+
+  async count() {
+    const res = await this.api.get(`payments`).catch(console.log);
+
+    return res?.data.response.filter((p: any) => p.payment_type !== 'test')
+      .length;
+  }
 }

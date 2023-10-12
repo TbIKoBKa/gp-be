@@ -1,14 +1,12 @@
-import { Column, Entity } from 'typeorm';
-import { Exclude } from 'class-transformer';
+import { Column, Entity, OneToOne } from 'typeorm';
 
-import { IPlayer } from './interfaces';
-import { IdDateBaseEntity } from '../../common/entity';
-import { IsString, IsInt, IsNumber } from 'class-validator';
+import { IsString, IsInt, IsNumber, IsOptional } from 'class-validator';
+import { IdDateBaseEntity } from '../../../common/entity';
+import { TokenEntity } from './token.entity';
 
 @Entity({ name: 'players' })
-export class PlayerEntity extends IdDateBaseEntity implements IPlayer {
-  @Exclude()
-  @Column({ type: 'varchar', select: false })
+export class AuthPlayerEntity extends IdDateBaseEntity {
+  @Column({ type: 'varchar' })
   public password: string;
 
   @Column({ type: 'varchar' })
@@ -19,8 +17,7 @@ export class PlayerEntity extends IdDateBaseEntity implements IPlayer {
   @IsString()
   public realname: string;
 
-  @Exclude()
-  @Column({ type: 'varchar', select: false })
+  @Column({ type: 'varchar' })
   @IsString()
   public ip: string;
 
@@ -48,8 +45,7 @@ export class PlayerEntity extends IdDateBaseEntity implements IPlayer {
   @IsInt()
   public regdate: number;
 
-  @Exclude()
-  @Column({ type: 'varchar', select: false })
+  @Column({ type: 'varchar' })
   @IsString()
   public regip: string;
 
@@ -76,4 +72,8 @@ export class PlayerEntity extends IdDateBaseEntity implements IPlayer {
   @Column({ type: 'varchar' })
   @IsString()
   public totp: string;
+
+  @OneToOne(() => TokenEntity)
+  @IsOptional()
+  public token?: TokenEntity | undefined;
 }

@@ -9,6 +9,8 @@ import { PermissionInheritanceEntity } from '../modules/permissions/permissionIn
 import { PermissionEntityEntity } from '../modules/permissions/permissionEntity.entity';
 import { OrderEntity } from '../modules/orders/orders.entity';
 import { ProductEntity } from '../modules/products/entities/product.entity';
+import { AuthPlayerEntity } from '../modules/auth/entities/player.entity';
+import { TokenEntity } from '../modules/auth/entities/token.entity';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -24,6 +26,8 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       password: this.configService.get('MYSQL_PASSWORD'),
       database: this.configService.get('MYSQL_NAME'),
       entities: [
+        AuthPlayerEntity,
+        TokenEntity,
         PlayerEntity,
         ContactEntity,
         PermissionEntity,

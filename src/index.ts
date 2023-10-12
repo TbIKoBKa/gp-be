@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { useContainer } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 
 import { AppModule } from './app.module';
 
@@ -17,6 +18,7 @@ async function bootstrap(): Promise<void> {
       contentSecurityPolicy: false,
     })
   );
+  app.use(cookieParser());
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
@@ -46,6 +48,7 @@ async function bootstrap(): Promise<void> {
     .setTitle('GP')
     .setDescription('API description')
     .setVersion('1.0')
+    .addCookieAuth('access_token', { type: 'apiKey' })
     .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('swagger', app, document);

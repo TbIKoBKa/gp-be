@@ -1,11 +1,6 @@
-import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { lastValueFrom } from 'rxjs';
 import { Brackets, DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
-import { PermissionEntity } from '../permissions/permissions.entity';
-import { PermissionInheritanceEntity } from '../permissions/permissionInheritance.entity';
 
 import { PlayerEntity } from './player.entity';
 import { IPlayerSearchDto } from './interfaces';
@@ -14,9 +9,7 @@ import { IPlayerSearchDto } from './interfaces';
 export class PlayerService {
   constructor(
     @InjectRepository(PlayerEntity)
-    private readonly playersEntityRepository: Repository<PlayerEntity>,
-    private readonly httpService: HttpService,
-    private readonly configService: ConfigService
+    private readonly playersEntityRepository: Repository<PlayerEntity>
   ) {}
 
   public async search(
@@ -36,19 +29,6 @@ export class PlayerService {
       );
     }
 
-    queryBuilder.leftJoinAndMapOne(
-      'players.permission',
-      PermissionEntity,
-      'permission',
-      'players.realname = permission.value'
-    );
-    queryBuilder.leftJoinAndMapOne(
-      'permission.permissionInheritance',
-      PermissionInheritanceEntity,
-      'permissionInheritance',
-      'permission.name = permissionInheritance.child'
-    );
-
     //TODO Maybe use pagination & sort?
     // queryBuilder.orderBy(`players.${sortBy}`, sort.toUpperCase());
 
@@ -57,32 +37,16 @@ export class PlayerService {
 
     const playersList = await queryBuilder.getManyAndCount();
 
-    const MOJANG_API = this.configService.get('MOJANG_API');
-    const MCHEAD_API = this.configService.get('MCHEAD_API');
+    return playersList;
+  }
 
-    const mappedPlayers = playersList[0].map(async (player) => {
-      const response = await lastValueFrom(
-        this.httpService.get(
-          `${MOJANG_API}/users/profiles/minecraft/${player.username}`
-        )
-      ).catch(() => {});
+  public async getRandom() {
+    const list = await this.playersEntityRepository.find();
 
-      const uuid: string =
-        response?.data?.id || 'f680df9bac5c4d3f9bac75bc0e316afa';
+    const max = await this.playersEntityRepository.count();
+    const randomNumber = Math.floor(Math.random() * max);
 
-      const avatar = `${MCHEAD_API}/avatar/${uuid}`;
-      const fullbody = `${MCHEAD_API}/player/${uuid}`;
-
-      player.avatar = avatar;
-      player.fullbody = fullbody;
-      player.uuid = uuid;
-
-      return player;
-    });
-
-    const responseList = await Promise.all(mappedPlayers);
-
-    return [responseList, playersList[1]];
+    return list[randomNumber];
   }
 
   public findOne(

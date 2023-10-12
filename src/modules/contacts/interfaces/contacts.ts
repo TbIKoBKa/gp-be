@@ -4,7 +4,8 @@ export interface IContact {
 }
 
 export interface IContacts {
-  email: IContact;
+  instagram: IContact;
+  tiktok: IContact;
   discord: IContact;
   tg: IContact;
 }

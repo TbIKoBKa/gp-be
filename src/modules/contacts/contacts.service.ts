@@ -22,8 +22,9 @@ export class ContactsService {
 
     return {
       discord: contacts[0],
-      email: contacts[1],
+      instagram: contacts[1],
       tg: contacts[2],
+      tiktok: contacts[3],
     };
   }
 }
