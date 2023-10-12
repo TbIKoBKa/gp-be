@@ -2,6 +2,7 @@ FROM node:18 as build
 WORKDIR /app
 COPY package*.json .
 COPY yarn.lock .
+RUN yarn cache clean
 RUN yarn
 COPY . .
 RUN yarn build
