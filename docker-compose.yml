@@ -7,6 +7,7 @@ services:
     environment:
       HOST: ${HOST}
       PORT: ${PORT}
+      JWT_SECRET: ${JWT_SECRET}
       FE_URL: ${FE_URL}
       BUNGEE_HOST: ${BUNGEE_HOST}
       BUNGEE_PORT: ${BUNGEE_PORT}
