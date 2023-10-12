@@ -7,7 +7,7 @@ RUN yarn
 COPY . .
 RUN yarn build
 
-FROM node:16
+FROM node:18
 WORKDIR /app
 COPY package.json .
 RUN yarn --only=production
