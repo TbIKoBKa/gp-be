@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { VoteHandlerService } from './vote-handler.service';
@@ -9,12 +9,17 @@ import { VoteHandlerDto } from './dto/vote-handler.dto';
 export class VoteHandlerController {
   constructor(private readonly voteHandlerService: VoteHandlerService) {}
 
-  @Post()
-  handler(@Body() voteHandlerDto: VoteHandlerDto) {
+  @Post('hot-mc')
+  hotMcHandler(@Body() voteHandlerDto: VoteHandlerDto) {
     console.log(
       '🚀 ~ file: vote-handler.controller.ts:11 ~ VoteHandlerController ~ handler ~ voteHandlerDto:',
       voteHandlerDto
     );
-    return this.voteHandlerService.handler(voteHandlerDto);
+    return this.voteHandlerService.hotMcHandler(voteHandlerDto);
+  }
+
+  @Get('t-monitoring')
+  tMonitoringHandler(@Param('id') id: string, @Param('hash') hash: string) {
+    return this.voteHandlerService.tMonitoringHandler(id, hash);
   }
 }

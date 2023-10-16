@@ -11,6 +11,7 @@ import { OrderEntity } from '../modules/orders/orders.entity';
 import { ProductEntity } from '../modules/products/entities/product.entity';
 import { AuthPlayerEntity } from '../modules/auth/entities/player.entity';
 import { TokenEntity } from '../modules/auth/entities/token.entity';
+import { VoteEntity } from '../modules/vote-handler/entities/vote.entity';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -35,6 +36,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         PermissionEntityEntity,
         OrderEntity,
         ProductEntity,
+        VoteEntity,
       ],
     };
   }
