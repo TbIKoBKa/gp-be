@@ -31,7 +31,8 @@ export class VoteHandlerController {
     );
     console.log(
       '🚀 ~ file: vote-handler.controller.ts:25 ~ VoteHandlerController ~ hotMcHandlerGet ~ req:',
-      req
+      req.body,
+      req.params
     );
     return this.voteHandlerService.hotMcHandler(voteHandlerDto);
   }
