@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 // import { IsNumber, IsString } from 'class-validator';
 
-export class VoteHandlerDto {
+export class HotmcVoteHandlerDto {
   @ApiProperty({ type: 'string' })
   // @IsString()
   nick: string;

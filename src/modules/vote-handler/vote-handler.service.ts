@@ -2,14 +2,15 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import crypto from 'crypto';
 
-import { VoteHandlerDto } from './dto/vote-handler.dto';
+import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
+import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto copy';
 import { RconService } from '../rcon/rcon.service';
 import axios from 'axios';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VoteEntity } from './entities/vote.entity';
 import { Repository } from 'typeorm';
 
-const MONITORING_URL = 'https://tmonitoring.com/api/check/';
+const TMONITORING_URL = 'https://tmonitoring.com/api/check/';
 
 @Injectable()
 export class VoteHandlerService {
@@ -23,7 +24,7 @@ export class VoteHandlerService {
   private readonly HOTMC_SECRET_KEY =
     this.configService.get('HOTMC_SECRET_KEY');
 
-  async hotMcHandler({ nick, sign, time }: VoteHandlerDto) {
+  async hotMcHandler({ nick, sign, time }: HotmcVoteHandlerDto) {
     const shasum = crypto.createHash('sha1');
     shasum.update(nick + time + this.HOTMC_SECRET_KEY);
     const sha1 = shasum.digest('hex');
@@ -50,6 +51,39 @@ export class VoteHandlerService {
     return 'ok';
   }
 
+  async mineservHandler({
+    project,
+    signature,
+    timestamp,
+    username,
+  }: MineservVoteHandlerDto) {
+    const secret = this.configService.get('MINESERV_SECRET_KEY');
+    console.log(
+      '🚀 ~ file: vote-handler.service.ts:61 ~ VoteHandlerService ~ secret:',
+      secret
+    );
+    const toHash = `${project}.${secret}.${timestamp}.${username}`;
+
+    console.log(
+      '🚀 ~ file: vote-handler.service.ts:64 ~ VoteHandlerService ~ toHash:',
+      toHash
+    );
+    const selfSign = crypto.createHash('sha256').update(toHash).digest('hex');
+    console.log(
+      '🚀 ~ file: vote-handler.service.ts:66 ~ VoteHandlerService ~ selfSign:',
+      selfSign
+    );
+
+    if (selfSign !== signature) {
+      console.error('not valid signature');
+      throw new UnauthorizedException();
+    }
+
+    await this.increaseBalance(username);
+
+    return 'Success';
+  }
+
   async tMonitoringHandler(id: string, hash: string) {
     console.log(
       '🚀 ~ file: vote-handler.service.ts:54 ~ VoteHandlerService ~ tMonitoringHandler ~ hash:',
@@ -60,7 +94,7 @@ export class VoteHandlerService {
       id
     );
     try {
-      const response = await axios.get(`${MONITORING_URL}${hash}?id=${id}`);
+      const response = await axios.get(`${TMONITORING_URL}${hash}?id=${id}`);
       const data = response.data;
       console.log(
         '🚀 ~ file: vote-handler.service.ts:59 ~ VoteHandlerService ~ tMonitoringHandler ~ data:',
@@ -71,32 +105,36 @@ export class VoteHandlerService {
         throw new Error('Invalid hash');
       }
 
-      const vote = await this.voteEntityRepository.findOne({
-        where: {
-          nickname: data.username,
-        },
-      });
-
-      if (vote) {
-        await this.voteEntityRepository.update(
-          {
-            id: vote.id,
-          },
-          {
-            ...vote,
-            balance: vote.balance + 1,
-          }
-        );
-      } else {
-        await this.voteEntityRepository.save({
-          nickname: data.username,
-          balance: 1,
-        });
-      }
+      await this.increaseBalance(data.username);
 
       return 'Success';
     } catch (error) {
       return error.message;
+    }
+  }
+
+  async increaseBalance(nickname: string) {
+    const vote = await this.voteEntityRepository.findOne({
+      where: {
+        nickname,
+      },
+    });
+
+    if (vote) {
+      await this.voteEntityRepository.update(
+        {
+          id: vote.id,
+        },
+        {
+          ...vote,
+          balance: vote.balance + 1,
+        }
+      );
+    } else {
+      await this.voteEntityRepository.save({
+        nickname,
+        balance: 1,
+      });
     }
   }
 }
