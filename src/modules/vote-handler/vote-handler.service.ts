@@ -58,32 +58,23 @@ export class VoteHandlerService {
     return 'done';
   }
 
-  async mcMonitorHandler({ id, name, sign }: McMonitorVoteHandlerDto) {
+  async mcMonitorHandler({ id, name, sign, sandbox }: McMonitorVoteHandlerDto) {
     const secret = this.configService.get('MCMONITOR_SECRET_KEY');
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:63 ~ VoteHandlerService ~ mcMonitorHandler ~ secret:',
-      secret
-    );
 
-    const calculatedSign = crypto
-      .createHash('sha1')
-      .update(name + secret + id)
-      .digest('hex');
+    if (sandbox !== '1') {
+      const calculatedSign = crypto
+        .createHash('sha1')
+        .update(name + secret + id)
+        .digest('hex');
 
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:69 ~ VoteHandlerService ~ mcMonitorHandler ~ calculatedSign:',
-      calculatedSign
-    );
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:72 ~ VoteHandlerService ~ mcMonitorHandler ~ sign:',
-      sign
-    );
+      if (calculatedSign !== sign) {
+        throw new UnauthorizedException();
+      }
 
-    if (calculatedSign !== sign) {
-      throw new UnauthorizedException();
+      if (name) {
+        await this.increaseBalance(name);
+      }
     }
-
-    await this.increaseBalance(name);
 
     return { status: 1, message: 'OK', queryIndex: 0 };
   }

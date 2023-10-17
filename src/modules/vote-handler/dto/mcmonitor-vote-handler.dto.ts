@@ -14,7 +14,7 @@ export class McMonitorVoteHandlerDto {
   // @IsString()
   sign: string;
 
-  @ApiProperty({ type: 'boolean' })
+  @ApiProperty({ type: 'string' })
   // @IsString()
-  sandbox: boolean;
+  sandbox: string;
 }
