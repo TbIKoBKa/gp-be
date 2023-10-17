@@ -6,10 +6,16 @@ import { VoteHandlerController } from './vote-handler.controller';
 import { RconModule } from '../rcon/rcon.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { VoteEntity } from './entities/vote.entity';
+import { NestjsFormDataModule } from 'nestjs-form-data';
 
 @Module({
   controllers: [VoteHandlerController],
   providers: [VoteHandlerService],
-  imports: [ConfigModule, RconModule, TypeOrmModule.forFeature([VoteEntity])],
+  imports: [
+    ConfigModule,
+    NestjsFormDataModule,
+    RconModule,
+    TypeOrmModule.forFeature([VoteEntity]),
+  ],
 })
 export class VoteHandlerModule {}
