@@ -14,6 +14,7 @@ import { VoteHandlerService } from './vote-handler.service';
 import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
 import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto copy';
 import { Request } from 'express';
+import { FormDataRequest } from 'nestjs-form-data';
 
 @ApiTags('vote')
 @Controller('vote-handler')
@@ -21,6 +22,7 @@ export class VoteHandlerController {
   constructor(private readonly voteHandlerService: VoteHandlerService) {}
 
   @Post('hot-mc')
+  @FormDataRequest()
   hotMcHandler(
     @Body() voteHandlerDto: HotmcVoteHandlerDto,
     @Req() req: Request
@@ -31,8 +33,7 @@ export class VoteHandlerController {
     );
     console.log(
       '🚀 ~ file: vote-handler.controller.ts:25 ~ VoteHandlerController ~ hotMcHandlerGet ~ req:',
-      req.body,
-      req.params
+      req.body
     );
     return this.voteHandlerService.hotMcHandler(voteHandlerDto);
   }

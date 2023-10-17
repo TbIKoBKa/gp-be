@@ -44,6 +44,7 @@
     "moment": "^2.29.4",
     "mysql2": "^2.3.3",
     "nest-winston": "1.6.2",
+    "nestjs-form-data": "^1.9.1",
     "nestjs-s3": "1.0.1",
     "passport": "0.6.0",
     "passport-jwt": "4.0.0",
