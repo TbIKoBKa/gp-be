@@ -80,6 +80,8 @@ export class VoteHandlerService {
     }
 
     await this.increaseBalance(username);
+
+    return 'done';
   }
 
   async tMonitoringHandler(id: string, hash: string) {
