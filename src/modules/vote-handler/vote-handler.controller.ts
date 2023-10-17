@@ -31,20 +31,9 @@ export class VoteHandlerController {
     );
     console.log(
       '🚀 ~ file: vote-handler.controller.ts:25 ~ VoteHandlerController ~ hotMcHandlerGet ~ req:',
-      req.body,
-      req.params
+      req
     );
     return this.voteHandlerService.hotMcHandler(voteHandlerDto);
-  }
-
-  @Get('hot-mc')
-  hotMcHandlerGet(@Req() req: Request) {
-    console.log(
-      '🚀 ~ file: vote-handler.controller.ts:25 ~ VoteHandlerController ~ hotMcHandlerGet ~ req:',
-      req.body,
-      req.params
-    );
-    return 'ok';
   }
 
   @Post('mineserv')

@@ -46,7 +46,7 @@ export class VoteHandlerService {
       throw new UnauthorizedException();
     }
 
-    await this.rcon.sendCommandClassic(`eco give ${nick} 1000`);
+    await this.increaseBalance(nick);
 
     return 'ok';
   }
