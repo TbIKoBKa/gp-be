@@ -4,6 +4,7 @@ import crypto from 'crypto';
 
 import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
 import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto copy';
+import { McMonitorVoteHandlerDto } from './dto/mcmonitor-vote-handler.dto';
 import { RconService } from '../rcon/rcon.service';
 import axios from 'axios';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -29,19 +30,6 @@ export class VoteHandlerService {
     shasum.update(nick + time + this.HOTMC_SECRET_KEY);
     const sha1 = shasum.digest('hex');
 
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:21 ~ VoteHandlerService ~ handler ~ this.HOTMC_SECRET_KEY:',
-      this.HOTMC_SECRET_KEY
-    );
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:25 ~ VoteHandlerService ~ handler ~ sha1:',
-      sha1
-    );
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:25 ~ VoteHandlerService ~ handler ~ sign:',
-      sign
-    );
-
     if (sign !== sha1) {
       throw new UnauthorizedException();
     }
@@ -58,30 +46,46 @@ export class VoteHandlerService {
     username,
   }: MineservVoteHandlerDto) {
     const secret = this.configService.get('MINESERV_SECRET_KEY');
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:61 ~ VoteHandlerService ~ secret:',
-      secret
-    );
     const toHash = `${project}.${secret}.${timestamp}.${username}`;
-
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:64 ~ VoteHandlerService ~ toHash:',
-      toHash
-    );
     const selfSign = crypto.createHash('sha256').update(toHash).digest('hex');
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:66 ~ VoteHandlerService ~ selfSign:',
-      selfSign
-    );
 
     if (selfSign !== signature) {
-      console.error('not valid signature');
       throw new UnauthorizedException();
     }
 
     await this.increaseBalance(username);
 
     return 'done';
+  }
+
+  async mcMonitorHandler({ id, name, sign }: McMonitorVoteHandlerDto) {
+    const secret = this.configService.get('MCMONITOR_SECRET_KEY');
+    console.log(
+      '🚀 ~ file: vote-handler.service.ts:63 ~ VoteHandlerService ~ mcMonitorHandler ~ secret:',
+      secret
+    );
+
+    const calculatedSign = crypto
+      .createHash('sha1')
+      .update(name + secret + id)
+      .digest('hex');
+
+    console.log(
+      '🚀 ~ file: vote-handler.service.ts:69 ~ VoteHandlerService ~ mcMonitorHandler ~ calculatedSign:',
+      calculatedSign
+    );
+    console.log(
+      '🚀 ~ file: vote-handler.service.ts:72 ~ VoteHandlerService ~ mcMonitorHandler ~ sign:',
+      sign
+    );
+
+    if (calculatedSign !== sign) {
+      throw new UnauthorizedException();
+    }
+
+    await this.increaseBalance(name);
+
+    return { status: 1, message: 'OK', queryIndex: 0 };
   }
 
   async tMonitoringHandler(id: string, hash: string) {
@@ -116,7 +120,7 @@ export class VoteHandlerService {
   async increaseBalance(nickname: string) {
     const vote = await this.voteEntityRepository.findOne({
       where: {
-        nickname,
+        nickname: nickname.toLowerCase(),
       },
     });
 
@@ -132,7 +136,7 @@ export class VoteHandlerService {
       );
     } else {
       await this.voteEntityRepository.save({
-        nickname,
+        nickname: nickname.toLowerCase(),
         balance: 1,
       });
     }
