@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Get, Param, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Req,
+  HttpStatus,
+  HttpCode,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { VoteHandlerService } from './vote-handler.service';
@@ -39,6 +48,7 @@ export class VoteHandlerController {
   }
 
   @Post('mineserv')
+  @HttpCode(HttpStatus.OK)
   mineservHandler(@Body() voteHandlerDto: MineservVoteHandlerDto) {
     console.log(
       '🚀 ~ file: vote-handler.controller.ts:11 ~ VoteHandlerController ~ handler ~ voteHandlerDto:',
