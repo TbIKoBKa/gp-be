@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import crypto from 'crypto';
 
@@ -9,7 +13,7 @@ import { RconService } from '../rcon/rcon.service';
 import axios from 'axios';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VoteEntity } from './entities/vote.entity';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 
 const TMONITORING_URL = 'https://tmonitoring.com/api/check/';
 
@@ -22,12 +26,31 @@ export class VoteHandlerService {
     private readonly rcon: RconService
   ) {}
 
-  private readonly HOTMC_SECRET_KEY =
-    this.configService.get('HOTMC_SECRET_KEY');
+  async getVotes(where: FindOptionsWhere<VoteEntity>) {
+    return this.voteEntityRepository.findAndCount({
+      where,
+    });
+  }
+
+  async getVoteByNickname(nickname: string) {
+    const vote = await this.voteEntityRepository.findOne({
+      where: {
+        nickname: nickname.toLowerCase(),
+      },
+    });
+
+    if (!vote) {
+      throw new NotFoundException();
+    }
+
+    return vote;
+  }
 
   async hotMcHandler({ nick, sign, time }: HotmcVoteHandlerDto) {
+    const HOTMC_SECRET_KEY = this.configService.get('HOTMC_SECRET_KEY');
+
     const shasum = crypto.createHash('sha1');
-    shasum.update(nick + time + this.HOTMC_SECRET_KEY);
+    shasum.update(nick + time + HOTMC_SECRET_KEY);
     const sha1 = shasum.digest('hex');
 
     if (sign !== sha1) {

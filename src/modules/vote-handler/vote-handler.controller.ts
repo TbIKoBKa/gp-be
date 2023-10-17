@@ -7,6 +7,7 @@ import {
   HttpStatus,
   HttpCode,
   Req,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -16,11 +17,23 @@ import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto copy';
 import { McMonitorVoteHandlerDto } from './dto/mcmonitor-vote-handler.dto';
 import { FormDataRequest } from 'nestjs-form-data';
 import { Request } from 'express';
+import { PaginationInterceptor } from '../../utils';
 
 @ApiTags('vote')
 @Controller('vote-handler')
 export class VoteHandlerController {
   constructor(private readonly voteHandlerService: VoteHandlerService) {}
+
+  @Get()
+  @UseInterceptors(PaginationInterceptor)
+  getVotes() {
+    return this.voteHandlerService.getVotes({});
+  }
+
+  @Get(':nickname')
+  getVoteByNickname(@Param('nickname') nickname: string) {
+    return this.voteHandlerService.getVoteByNickname(nickname);
+  }
 
   @Post('hot-mc')
   @FormDataRequest()
@@ -37,10 +50,6 @@ export class VoteHandlerController {
   @Post('mc-monitor')
   @HttpCode(HttpStatus.OK)
   mcMonitorHandler(@Body() voteHandlerDto: McMonitorVoteHandlerDto) {
-    console.log(
-      '🚀 ~ file: vote-handler.controller.ts:38 ~ VoteHandlerController ~ mcMonitorHandler ~ voteHandlerDto:',
-      voteHandlerDto
-    );
     return this.voteHandlerService.mcMonitorHandler(voteHandlerDto);
   }
 
