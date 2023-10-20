@@ -6,7 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthPlayerEntity } from './entities/player.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { TokenEntity } from './entities/token.entity';
+import { CoinsEntity } from './entities/coins.entity';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { TokenEntity } from './entities/token.entity';
         expiresIn: '7d',
       },
     }),
-    TypeOrmModule.forFeature([AuthPlayerEntity, TokenEntity]),
+    TypeOrmModule.forFeature([AuthPlayerEntity, CoinsEntity]),
     ConfigModule,
   ],
   controllers: [AuthController],

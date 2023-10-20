@@ -1,8 +1,8 @@
-import { Column, Entity, OneToOne } from 'typeorm';
+import { Column, Entity, OneToOne, JoinColumn } from 'typeorm';
 
 import { IsString, IsInt, IsNumber, IsOptional } from 'class-validator';
 import { IdDateBaseEntity } from '../../../common/entity';
-import { TokenEntity } from './token.entity';
+import { CoinsEntity } from './coins.entity';
 
 @Entity({ name: 'players' })
 export class AuthPlayerEntity extends IdDateBaseEntity {
@@ -73,7 +73,8 @@ export class AuthPlayerEntity extends IdDateBaseEntity {
   @IsString()
   public totp: string;
 
-  @OneToOne(() => TokenEntity)
+  @OneToOne(() => CoinsEntity)
+  @JoinColumn({ name: 'username', referencedColumnName: 'nick' })
   @IsOptional()
-  public token?: TokenEntity | undefined;
+  public coins?: CoinsEntity;
 }

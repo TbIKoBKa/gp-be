@@ -71,12 +71,20 @@ export class AuthService {
       where: {
         id,
       },
+      relations: {
+        coins: true,
+      },
     });
   }
 
   async findOne(login: string) {
     const player = await this.playersEntityRepository.findOne({
-      where: { username: login.toLowerCase() },
+      where: {
+        username: login.toLowerCase(),
+      },
+      relations: {
+        coins: true,
+      },
     });
 
     if (!player) {
