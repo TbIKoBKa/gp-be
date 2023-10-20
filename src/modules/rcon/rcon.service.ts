@@ -11,9 +11,9 @@ export class RconService {
   async connect() {
     try {
       this.rconClassic = new Rcon({
-        host: this.configService.get('BUNGEE_HOST') || '',
-        port: this.configService.get('BUNGEE_PORT'),
-        password: this.configService.get('BUNGEE_PASSWORD') || '',
+        host: this.configService.get('RCON_HOST') || '',
+        port: this.configService.get('RCON_PORT'),
+        password: this.configService.get('RCON_PASSWORD') || '',
       });
 
       await this.rconClassic.connect();

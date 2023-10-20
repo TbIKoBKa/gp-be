@@ -17,7 +17,7 @@ import { AppController } from './app.controller';
 import { TypeOrmConfigService } from './config';
 import { HttpExceptionFilter } from './utils';
 import { ProductsModule } from './modules/products/products.module';
-import { VoteHandlerModule } from './modules/vote-handler/vote-handler.module';
+import { VotesModule } from './modules/votes/votes.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { AuthModule } from './modules/auth/auth.module';
 
@@ -84,7 +84,7 @@ import { AuthModule } from './modules/auth/auth.module';
     OrdersModule,
     RconModule,
     ProductsModule,
-    VoteHandlerModule,
+    VotesModule,
     PaymentsModule,
     AuthModule,
   ],

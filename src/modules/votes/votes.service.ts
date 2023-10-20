@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import crypto from 'crypto';
 
@@ -10,15 +6,12 @@ import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
 import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto copy';
 import { McMonitorVoteHandlerDto } from './dto/mcmonitor-vote-handler.dto';
 import { RconService } from '../rcon/rcon.service';
-import axios from 'axios';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VoteEntity } from './entities/vote.entity';
 import { FindOptionsWhere, Repository } from 'typeorm';
 
-const TMONITORING_URL = 'https://tmonitoring.com/api/check/';
-
 @Injectable()
-export class VoteHandlerService {
+export class VotesService {
   constructor(
     @InjectRepository(VoteEntity)
     private readonly voteEntityRepository: Repository<VoteEntity>,
@@ -33,17 +26,11 @@ export class VoteHandlerService {
   }
 
   async getVoteByNickname(nickname: string) {
-    const vote = await this.voteEntityRepository.findOne({
+    return this.voteEntityRepository.findAndCount({
       where: {
         nickname: nickname.toLowerCase(),
       },
     });
-
-    if (!vote) {
-      throw new NotFoundException();
-    }
-
-    return vote;
   }
 
   async hotMcHandler({ nick, sign, time }: HotmcVoteHandlerDto) {
@@ -57,7 +44,7 @@ export class VoteHandlerService {
       throw new UnauthorizedException();
     }
 
-    await this.increaseBalance(nick);
+    await this.handleVote(nick);
 
     return 'ok';
   }
@@ -76,7 +63,7 @@ export class VoteHandlerService {
       throw new UnauthorizedException();
     }
 
-    await this.increaseBalance(username);
+    await this.handleVote(username);
 
     return 'done';
   }
@@ -95,64 +82,21 @@ export class VoteHandlerService {
       }
 
       if (name) {
-        await this.increaseBalance(name);
+        await this.handleVote(name);
       }
     }
 
     return { status: 1, message: 'OK', queryIndex: 0 };
   }
 
-  async tMonitoringHandler(id: string, hash: string) {
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:54 ~ VoteHandlerService ~ tMonitoringHandler ~ hash:',
-      hash
-    );
-    console.log(
-      '🚀 ~ file: vote-handler.service.ts:54 ~ VoteHandlerService ~ tMonitoringHandler ~ id:',
-      id
-    );
-    try {
-      const response = await axios.get(`${TMONITORING_URL}${hash}?id=${id}`);
-      const data = response.data;
-      console.log(
-        '🚀 ~ file: vote-handler.service.ts:59 ~ VoteHandlerService ~ tMonitoringHandler ~ data:',
-        data
-      );
-
-      if (data.hash.length !== 32 || hash.length !== 32 || data.hash !== hash) {
-        throw new Error('Invalid hash');
-      }
-
-      await this.increaseBalance(data.username);
-
-      return 'Success';
-    } catch (error) {
-      return error.message;
-    }
-  }
-
-  async increaseBalance(nickname: string) {
-    const vote = await this.voteEntityRepository.findOne({
-      where: {
-        nickname: nickname.toLowerCase(),
-      },
+  async handleVote(nickname: string) {
+    await this.voteEntityRepository.save({
+      nickname: nickname.toLowerCase(),
+      createdAt: new Date().toISOString(),
     });
 
-    if (vote) {
-      await this.voteEntityRepository.update(
-        {
-          id: vote.id,
-        },
-        {
-          ...vote,
-          balance: vote.balance + 1,
-        }
-      );
-    } else {
-      await this.voteEntityRepository.save({
-        nickname: nickname.toLowerCase(),
-        balance: 1,
-      });
-    }
+    await this.rcon.sendCommandClassic(
+      'sync console classic coins give {user} 1'
+    );
   }
 }

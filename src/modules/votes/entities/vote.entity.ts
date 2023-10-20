@@ -7,6 +7,6 @@ export class VoteEntity extends IdDateBaseEntity {
   @Column({ type: 'varchar' })
   public nickname: string;
 
-  @Column({ type: 'int' })
-  public balance: number;
+  @Column({ type: 'varchar', name: 'created_at' })
+  public createdAt: string;
 }
