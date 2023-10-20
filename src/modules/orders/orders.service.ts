@@ -132,7 +132,7 @@ export class OrdersService {
 
           console.log(command);
 
-          await this.rcon.sendCommandClassic(command);
+          await this.rcon.sendCommand(command);
         }
       } catch (error) {
         console.error(error);

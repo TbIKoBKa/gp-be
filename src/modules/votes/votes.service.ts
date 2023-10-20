@@ -95,8 +95,8 @@ export class VotesService {
       createdAt: new Date().toISOString(),
     });
 
-    await this.rcon.sendCommandClassic(
-      'sync console classic coins give {user} 1'
+    await this.rcon.sendCommand(
+      `sync console lobby coins give ${nickname.toLowerCase()} 1`
     );
   }
 }

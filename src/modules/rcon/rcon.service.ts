@@ -6,17 +6,17 @@ import { Rcon } from 'rcon-client';
 export class RconService {
   constructor(private readonly configService: ConfigService) {}
 
-  private rconClassic: Rcon;
+  private rcon: Rcon;
 
   async connect() {
     try {
-      this.rconClassic = new Rcon({
+      this.rcon = new Rcon({
         host: this.configService.get('RCON_HOST') || '',
         port: this.configService.get('RCON_PORT'),
         password: this.configService.get('RCON_PASSWORD') || '',
       });
 
-      await this.rconClassic.connect();
+      await this.rcon.connect();
       console.log('Connected to RCON');
     } catch (error) {
       console.error('Failed to connect to RCON:', error);
@@ -25,16 +25,16 @@ export class RconService {
 
   async disconnect() {
     try {
-      await this.rconClassic.end();
+      await this.rcon.end();
       console.log('Disconnected from RCON');
     } catch (error) {
       console.error('Failed to disconnect from RCON:', error);
     }
   }
 
-  async sendCommandClassic(command: string) {
+  async sendCommand(command: string) {
     try {
-      const response = await this.rconClassic.send(command);
+      const response = await this.rcon.send(command);
       console.log('Command response:', response);
     } catch (error) {
       console.error('Failed to send command:', error);
