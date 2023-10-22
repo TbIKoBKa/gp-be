@@ -7,6 +7,7 @@ import { RconModule } from '../rcon/rcon.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { VoteEntity } from './entities/vote.entity';
 import { NestjsFormDataModule } from 'nestjs-form-data';
+import { GoCoinsModule } from '../go-coins/go-coins.module';
 
 @Module({
   controllers: [VotesController],
@@ -15,6 +16,7 @@ import { NestjsFormDataModule } from 'nestjs-form-data';
     ConfigModule,
     NestjsFormDataModule,
     RconModule,
+    GoCoinsModule,
     TypeOrmModule.forFeature([VoteEntity]),
   ],
 })

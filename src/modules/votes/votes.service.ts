@@ -9,12 +9,14 @@ import { RconService } from '../rcon/rcon.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VoteEntity } from './entities/vote.entity';
 import { FindOptionsWhere, Repository } from 'typeorm';
+import { GoCoinsService } from '../go-coins/go-coins.service';
 
 @Injectable()
 export class VotesService {
   constructor(
     @InjectRepository(VoteEntity)
     private readonly voteEntityRepository: Repository<VoteEntity>,
+    private readonly goCoinsService: GoCoinsService,
     private readonly configService: ConfigService,
     private readonly rcon: RconService
   ) {}
@@ -95,8 +97,6 @@ export class VotesService {
       createdAt: new Date().toISOString(),
     });
 
-    await this.rcon.sendCommand(
-      `sync console lobby coins give ${nickname.toLowerCase()} 1`
-    );
+    await this.goCoinsService.updateBalance(nickname, 1);
   }
 }

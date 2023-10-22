@@ -6,7 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthPlayerEntity } from './entities/player.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { CoinsEntity } from './entities/coins.entity';
+import { GoCoinEntity } from '../go-coins/entities/go-coin.entity';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { CoinsEntity } from './entities/coins.entity';
         expiresIn: '7d',
       },
     }),
-    TypeOrmModule.forFeature([AuthPlayerEntity, CoinsEntity]),
+    TypeOrmModule.forFeature([AuthPlayerEntity, GoCoinEntity]),
     ConfigModule,
   ],
   controllers: [AuthController],

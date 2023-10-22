@@ -11,7 +11,7 @@ import { OrderEntity } from '../modules/orders/orders.entity';
 import { ProductEntity } from '../modules/products/entities/product.entity';
 import { AuthPlayerEntity } from '../modules/auth/entities/player.entity';
 import { VoteEntity } from '../modules/votes/entities/vote.entity';
-import { CoinsEntity } from '../modules/auth/entities/coins.entity';
+import { GoCoinEntity } from '../modules/go-coins/entities/go-coin.entity';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -28,7 +28,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       database: this.configService.get('MYSQL_NAME'),
       entities: [
         AuthPlayerEntity,
-        CoinsEntity,
+        GoCoinEntity,
         PlayerEntity,
         ContactEntity,
         PermissionEntity,

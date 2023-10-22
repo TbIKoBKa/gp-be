@@ -2,7 +2,7 @@ import { Column, Entity, OneToOne, JoinColumn } from 'typeorm';
 
 import { IsString, IsInt, IsNumber, IsOptional } from 'class-validator';
 import { IdDateBaseEntity } from '../../../common/entity';
-import { CoinsEntity } from './coins.entity';
+import { GoCoinEntity } from '../../go-coins/entities/go-coin.entity';
 
 @Entity({ name: 'players' })
 export class AuthPlayerEntity extends IdDateBaseEntity {
@@ -73,8 +73,8 @@ export class AuthPlayerEntity extends IdDateBaseEntity {
   @IsString()
   public totp: string;
 
-  @OneToOne(() => CoinsEntity)
+  @OneToOne(() => GoCoinEntity)
   @JoinColumn({ name: 'username', referencedColumnName: 'nick' })
   @IsOptional()
-  public coins?: CoinsEntity;
+  public coins?: GoCoinEntity;
 }
