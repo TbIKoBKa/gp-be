@@ -15,4 +15,10 @@ export class CreatePaymentDto {
   @ApiProperty({ type: [Number] })
   @IsArray()
   public products: number[];
+
+  @ApiProperty({ type: String })
+  @IsString({
+    message: 'Value should be string',
+  })
+  public payment_method: string;
 }

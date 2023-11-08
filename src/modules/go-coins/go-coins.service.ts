@@ -22,7 +22,7 @@ export class GoCoinsService {
   }
 
   async getGoCoinsByNickname(nickname: string) {
-    return this.goCoinsRepository.findAndCount({
+    return this.goCoinsRepository.findOne({
       where: {
         nick: nickname.toLowerCase(),
       },
