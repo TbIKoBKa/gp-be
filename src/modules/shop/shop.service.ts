@@ -88,7 +88,7 @@ export class ShopService {
       throw new ForbiddenException('Invalid source IP');
     }
 
-    const { MERCHANT_ID, AMOUNT, intid, SIGN, MERCHANT_ORDER_ID, P_EMAIL, CUR_ID } = body;
+    const { AMOUNT, intid, SIGN, MERCHANT_ORDER_ID } = body;
 
     const merchantId = this.configService.get<string>('FREEKASSA_MERCHANT_ID');
     const secret2 = this.configService.get<string>('FREEKASSA_SECRET2');
