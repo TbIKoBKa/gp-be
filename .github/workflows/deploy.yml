@@ -1,0 +1,17 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 65.108.227.90
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: /opt/gp-be/deploy.sh
