@@ -28,9 +28,10 @@ export class ShopService {
   ) {}
 
   getProducts() {
-    return catalog.map(({ id, type, name, image, description, variants }) => ({
+    return catalog.map(({ id, type, server, name, image, description, variants }) => ({
       id,
       type,
+      server,
       name,
       image,
       description,
@@ -46,6 +47,7 @@ export class ShopService {
 
     const order = await this.orderRepository.save({
       playerName: dto.playerName,
+      server: product.server,
       variantId: variant.id,
       productName: product.name,
       variantLabel: variant.label,
@@ -137,7 +139,7 @@ export class ShopService {
     try {
       for (const cmdTemplate of variant.commands) {
         const command = cmdTemplate.replace(/{player}/g, order.playerName);
-        await this.bridgeService.execute('grief', command);
+        await this.bridgeService.execute(order.server, command);
       }
 
       order.status = OrderStatus.DELIVERED;

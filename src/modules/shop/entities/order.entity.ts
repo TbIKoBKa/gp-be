@@ -16,6 +16,9 @@ export class OrderEntity {
   playerName: string;
 
   @Column()
+  server: string;
+
+  @Column()
   variantId: string;
 
   @Column()
