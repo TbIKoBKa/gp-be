@@ -1,14 +1,8 @@
-import {
-  CacheInterceptor,
-  Controller,
-  Get,
-  Query,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 import { ApiTags } from '@nestjs/swagger';
 
 import { PlayerService } from './player.service';
-import { PlayerEntity } from './player.entity';
 import { PlayerSearchDto } from './dto';
 import { PaginationInterceptor } from '../../utils';
 
@@ -20,9 +14,7 @@ export class PlayerController {
 
   @Get('/')
   @UseInterceptors(PaginationInterceptor)
-  public search(
-    @Query() dto: PlayerSearchDto
-  ): Promise<[Array<PlayerEntity>, number]> {
+  public search(@Query() dto: PlayerSearchDto) {
     return this.playerService.search(dto);
   }
 

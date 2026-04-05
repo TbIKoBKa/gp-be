@@ -1,9 +1,10 @@
-import { Column, Entity } from 'typeorm';
-
-import { IdDateBaseEntity } from '../../../common/entity';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'votes' })
-export class VoteEntity extends IdDateBaseEntity {
+export class VoteEntity {
+  @PrimaryGeneratedColumn()
+  public id: number;
+
   @Column({ type: 'varchar' })
   public nickname: string;
 

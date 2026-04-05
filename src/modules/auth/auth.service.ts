@@ -1,125 +1,125 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { LoginDto } from './dto/login.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuthPlayerEntity } from './entities/player.entity';
 import { Repository } from 'typeorm';
-import { Sha256 } from '../../utils/sha256';
 import { JwtService } from '@nestjs/jwt';
-import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { Request, Response } from 'express';
+import { compare } from 'bcryptjs';
+import crypto from 'crypto';
 
-const sha256 = new Sha256();
+import { LimboAuthPlayer } from './entities/limboauth-player.entity';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(AuthPlayerEntity)
-    private readonly playersEntityRepository: Repository<AuthPlayerEntity>,
+    @InjectRepository(LimboAuthPlayer, 'minecraft')
+    private readonly authRepository: Repository<LimboAuthPlayer>,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   async login({ login, password }: LoginDto, res: Response) {
-    const player = await this.findOne(login);
-    const { id, password: currentPassword } = player;
+    const player = await this.authRepository.findOne({
+      where: { lowercaseNickname: login.toLowerCase() },
+    });
 
-    const isValidPassword = sha256.isValidPassword(password, currentPassword);
+    if (!player) throw new UnauthorizedException();
 
-    if (!isValidPassword) {
-      throw new UnauthorizedException();
-    }
+    const valid = await this.verifyPassword(password, player.hash);
+    if (!valid) throw new UnauthorizedException();
 
-    await this.generateTokens(id, res);
+    await this.generateTokens(player, res);
 
-    return {
-      ...player,
-      password: undefined,
-    };
+    return this.sanitize(player);
   }
 
   async logout(res: Response) {
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
-
     return true;
   }
 
   async refresh(req: Request, res: Response) {
     const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) throw new UnauthorizedException();
 
-    if (!refreshToken) {
+    let payload: { nickname: string; uuid: string };
+    try {
+      payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.get('JWT_SECRET'),
+      });
+    } catch {
       throw new UnauthorizedException();
     }
 
-    const isValidRefresh = this.jwtService.verifyAsync(refreshToken, {
-      secret: this.configService.get('JWT_SECRET'),
+    if (!payload.nickname) throw new UnauthorizedException();
+
+    const player = await this.authRepository.findOne({
+      where: { lowercaseNickname: payload.nickname.toLowerCase() },
     });
 
-    if (!isValidRefresh) {
-      throw new UnauthorizedException();
-    }
+    if (!player) throw new UnauthorizedException();
 
-    const { id } = this.jwtService.decode(refreshToken) as { id: number };
+    await this.generateTokens(player, res);
 
-    if (!id) {
-      throw new UnauthorizedException();
-    }
-
-    await this.generateTokens(id, res);
-
-    return this.playersEntityRepository.findOne({
-      where: {
-        id,
-      },
-      relations: {
-        coins: true,
-      },
-    });
+    return this.sanitize(player);
   }
 
-  async findOne(login: string) {
-    const player = await this.playersEntityRepository.findOne({
-      where: {
-        username: login.toLowerCase(),
-      },
-      relations: {
-        coins: true,
-      },
-    });
-
-    if (!player) {
-      throw new UnauthorizedException();
+  private async verifyPassword(plain: string, hash: string): Promise<boolean> {
+    if (hash.startsWith('$2a$') || hash.startsWith('$2b$') || hash.startsWith('$2y$')) {
+      return compare(plain, hash);
     }
 
-    return player;
+    if (hash.startsWith('$SHA$')) {
+      return this.verifySha256(plain, hash);
+    }
+
+    return false;
   }
 
-  async generateTokens(id: number, res: Response) {
-    const jwtAccessToken = await this.jwtService.signAsync(
-      { id, type: 'access' },
-      { secret: this.configService.get('JWT_SECRET') }
-    );
-    const jwtRefreshToken = await this.jwtService.signAsync(
-      { id, type: 'refresh' },
-      { secret: this.configService.get('JWT_SECRET') }
-    );
+  private verifySha256(password: string, hash: string): boolean {
+    const parts = hash.split('$');
+    if (parts.length !== 4) return false;
+    const salt = parts[2];
+    const hashed = crypto.createHash('sha256').update(password).digest('hex');
+    const finalHash = crypto.createHash('sha256').update(hashed + salt).digest('hex');
+    return hash === `$SHA$${salt}$${finalHash}`;
+  }
 
-    res.cookie('access_token', jwtAccessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: true,
-      maxAge: 600000,
-    });
-    res.cookie('refresh_token', jwtRefreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: true,
-      maxAge: 604800000,
-    });
-
+  private sanitize(player: LimboAuthPlayer) {
     return {
-      jwtAccessToken,
-      jwtRefreshToken,
+      nickname: player.nickname,
+      uuid: player.uuid,
+      regDate: player.regDate,
+      loginDate: player.loginDate,
     };
+  }
+
+  private async generateTokens(player: LimboAuthPlayer, res: Response) {
+    const payload = { nickname: player.lowercaseNickname, uuid: player.uuid };
+    const secret = this.configService.get('JWT_SECRET');
+
+    const accessToken = await this.jwtService.signAsync(
+      { ...payload, type: 'access' },
+      { secret, expiresIn: '10m' },
+    );
+    const refreshToken = await this.jwtService.signAsync(
+      { ...payload, type: 'refresh' },
+      { secret, expiresIn: '7d' },
+    );
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: true,
+      maxAge: 600_000,
+    });
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: true,
+      maxAge: 604_800_000,
+    });
   }
 }

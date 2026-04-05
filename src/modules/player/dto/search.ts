@@ -1,13 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional } from 'class-validator';
 
-import { IPlayerSearchDto } from '../interfaces';
-
-export class PlayerSearchDto implements IPlayerSearchDto {
+export class PlayerSearchDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString({
-    message: 'Value should be string',
-  })
+  @IsString({ message: 'Value should be string' })
   public nickname: string;
 }

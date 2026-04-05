@@ -14,7 +14,6 @@ import { VotesService } from './votes.service';
 import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
 import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto copy';
 import { McMonitorVoteHandlerDto } from './dto/mcmonitor-vote-handler.dto';
-import { FormDataRequest } from 'nestjs-form-data';
 import { PaginationInterceptor } from '../../utils';
 
 @ApiTags('votes')
@@ -35,7 +34,6 @@ export class VotesController {
   }
 
   @Post('handler/hot-mc')
-  @FormDataRequest()
   hotMcHandler(@Body() voteHandlerDto: HotmcVoteHandlerDto) {
     return this.votesService.hotMcHandler(voteHandlerDto);
   }

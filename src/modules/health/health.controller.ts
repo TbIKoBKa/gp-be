@@ -10,7 +10,7 @@ import {
 import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('health')
-@SkipThrottle(true)
+@SkipThrottle()
 @Controller('/health')
 export class HealthController {
   constructor(

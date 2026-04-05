@@ -1,61 +1,59 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
-import { PlayerEntity } from './player.entity';
-import { IPlayerSearchDto } from './interfaces';
+import { LimboAuthPlayer } from '../auth/entities/limboauth-player.entity';
+
+interface PlayerSearchDto {
+  nickname?: string;
+}
 
 @Injectable()
 export class PlayerService {
   constructor(
-    @InjectRepository(PlayerEntity)
-    private readonly playersEntityRepository: Repository<PlayerEntity>
+    @InjectRepository(LimboAuthPlayer, 'minecraft')
+    private readonly authRepository: Repository<LimboAuthPlayer>,
   ) {}
 
-  public async search(
-    dto: IPlayerSearchDto
-  ): Promise<[Array<PlayerEntity>, number]> {
-    const { nickname } = dto;
-    const queryBuilder =
-      this.playersEntityRepository.createQueryBuilder('players');
+  async search(dto: PlayerSearchDto): Promise<[Array<Record<string, unknown>>, number]> {
+    const qb = this.authRepository.createQueryBuilder('auth');
 
-    queryBuilder.select();
+    qb.select([
+      'auth.nickname',
+      'auth.uuid',
+      'auth.regDate',
+      'auth.loginDate',
+    ]);
 
-    if (nickname) {
-      queryBuilder.andWhere(
-        new Brackets((qb) => {
-          qb.where(`players.username LIKE '%${nickname.toLowerCase()}%'`);
-        })
-      );
+    if (dto.nickname) {
+      qb.where('auth.lowercaseNickname LIKE :nick', {
+        nick: `%${dto.nickname.toLowerCase()}%`,
+      });
     }
 
-    //TODO Maybe use pagination & sort?
-    // queryBuilder.orderBy(`players.${sortBy}`, sort.toUpperCase());
+    qb.take(20);
 
-    // queryBuilder.skip(skip);
-    queryBuilder.take(20);
-
-    const playersList = await queryBuilder.getManyAndCount();
-
-    return playersList;
+    const [players, count] = await qb.getManyAndCount();
+    return [players.map(this.sanitize), count];
   }
 
-  public async getRandom() {
-    const list = await this.playersEntityRepository.find();
+  async getRandom() {
+    const player = await this.authRepository
+      .createQueryBuilder('auth')
+      .select(['auth.nickname', 'auth.uuid', 'auth.regDate', 'auth.loginDate'])
+      .orderBy('RAND()')
+      .limit(1)
+      .getOne();
 
-    const max = await this.playersEntityRepository.count();
-    const randomNumber = Math.floor(Math.random() * max);
-
-    return list[randomNumber];
+    return player ? this.sanitize(player) : null;
   }
 
-  public findOne(
-    where: FindOptionsWhere<PlayerEntity>
-  ): Promise<PlayerEntity | null> {
-    return this.playersEntityRepository.findOne({ where });
-  }
-
-  public delete(where: FindOptionsWhere<PlayerEntity>): Promise<DeleteResult> {
-    return this.playersEntityRepository.delete(where);
+  private sanitize(player: LimboAuthPlayer) {
+    return {
+      nickname: player.nickname,
+      uuid: player.uuid,
+      regDate: player.regDate,
+      loginDate: player.loginDate,
+    };
   }
 }

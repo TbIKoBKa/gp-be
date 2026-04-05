@@ -5,20 +5,16 @@ import crypto from 'crypto';
 import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
 import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto copy';
 import { McMonitorVoteHandlerDto } from './dto/mcmonitor-vote-handler.dto';
-import { RconService } from '../rcon/rcon.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VoteEntity } from './entities/vote.entity';
 import { FindOptionsWhere, Repository } from 'typeorm';
-import { GoCoinsService } from '../go-coins/go-coins.service';
 
 @Injectable()
 export class VotesService {
   constructor(
     @InjectRepository(VoteEntity)
     private readonly voteEntityRepository: Repository<VoteEntity>,
-    private readonly goCoinsService: GoCoinsService,
-    private readonly configService: ConfigService,
-    private readonly rcon: RconService
+    private readonly configService: ConfigService
   ) {}
 
   async getVotes(where: FindOptionsWhere<VoteEntity>) {
@@ -96,7 +92,5 @@ export class VotesService {
       nickname: nickname.toLowerCase(),
       createdAt: new Date().toISOString(),
     });
-
-    await this.goCoinsService.updateBalance(nickname, 1);
   }
 }

@@ -5,20 +5,25 @@ declare global {
       HOST: string;
       PORT: number;
       FE_URL: string;
-      MYSQL_HOST: string;
-      MYSQL_PORT: number;
-      MYSQL_NAME: string;
-      MYSQL_USER: string;
-      MYSQL_PASSWORD: string;
-      MOJANG_API: string;
-      MCHEAD_API: string;
-      LIQPAY_PUBLIC_KEY: string;
-      LIQPAY_PRIVATE_KEY: string;
-      LIQPAY_SERVER_URL: string;
-      INTERKASSA_CHECKOUT_ID: string;
-      INTERKASSA_SIGN_KEY: string;
-      PP_TOKEN: string;
-      PP_SHOP_ID: string;
+      JWT_SECRET: string;
+      MC_DB_HOST: string;
+      MC_DB_PORT: number;
+      MC_DB_NAME: string;
+      MC_DB_USER: string;
+      MC_DB_PASSWORD: string;
+      GP_DB_HOST: string;
+      GP_DB_PORT: number;
+      GP_DB_NAME: string;
+      GP_DB_USER: string;
+      GP_DB_PASSWORD: string;
+      HOTMC_SECRET_KEY: string;
+      MINESERV_SECRET_KEY: string;
+      MCMONITOR_SECRET_KEY: string;
+      FREEKASSA_MERCHANT_ID: string;
+      FREEKASSA_SECRET1: string;
+      FREEKASSA_SECRET2: string;
+      BRIDGE_URL: string;
+      BRIDGE_SECRET: string;
     }
   }
 }

@@ -1,16 +1,18 @@
-FROM node:18 as build
+FROM node:22-alpine AS build
 WORKDIR /app
-COPY package*.json .
-COPY yarn.lock .
-RUN yarn cache clean
-RUN yarn
-COPY . .
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+COPY tsconfig.json ./
+COPY @types ./@types
+COPY src ./src
 RUN yarn build
 
-FROM node:18
+FROM node:22-alpine
 WORKDIR /app
-COPY package.json .
-RUN yarn --only=production
+ENV NODE_ENV=production
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile --production && yarn cache clean
 COPY --from=build /app/dist ./dist
-EXPOSE 3000
-CMD yarn start:prod
+USER node
+EXPOSE 4000
+CMD ["node", "."]

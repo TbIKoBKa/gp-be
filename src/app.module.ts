@@ -1,6 +1,6 @@
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { Logger, Module, ValidationPipe } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,18 +8,16 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { HealthModule } from './modules/health/health.module';
 import { PlayerModule } from './modules/player/player.module';
-import { ContactsModule } from './modules/contacts/contacts.module';
-import { PermissionsModule } from './modules/permissions/permissions.module';
-import { OrdersModule } from './modules/orders/orders.module';
-import { RconModule } from './modules/rcon/rcon.module';
-
 import { AppController } from './app.controller';
-import { TypeOrmConfigService } from './config';
 import { HttpExceptionFilter } from './utils';
-import { ProductsModule } from './modules/products/products.module';
 import { VotesModule } from './modules/votes/votes.module';
-import { PaymentsModule } from './modules/payments/payments.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { ShopModule } from './modules/shop/shop.module';
+import { BridgeModule } from './modules/bridge/bridge.module';
+
+import { LimboAuthPlayer } from './modules/auth/entities/limboauth-player.entity';
+import { OrderEntity } from './modules/shop/entities/order.entity';
+import { VoteEntity } from './modules/votes/entities/vote.entity';
 
 @Module({
   providers: [
@@ -43,50 +41,64 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     WinstonModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: () => {
-        return {
-          transports: [
-            new winston.transports.Console({
-              format: winston.format.combine(
-                winston.format.simple(),
-                winston.format.timestamp({ format: 'DD.MM.YYYY, HH:mm:ss' }),
-                winston.format.ms(),
-                winston.format.printf((debug) => {
-                  const { timestamp, level, message, context, ms } = debug;
-
-                  return `[Nest] ${
-                    timestamp as string
-                  }\t${level.toUpperCase()} [${context as string}] ${
-                    message as string
-                  } ${ms as string}`;
-                }),
-                winston.format.colorize({
-                  all: true,
-                })
-              ),
-            }),
-          ],
-        };
-      },
+      useFactory: () => ({
+        transports: [
+          new winston.transports.Console({
+            format: winston.format.combine(
+              winston.format.simple(),
+              winston.format.timestamp({ format: 'DD.MM.YYYY, HH:mm:ss' }),
+              winston.format.ms(),
+              winston.format.printf((debug) => {
+                const { timestamp, level, message, context, ms } = debug;
+                return `[Nest] ${timestamp as string}\t${level.toUpperCase()} [${context as string}] ${message as string} ${ms as string}`;
+              }),
+              winston.format.colorize({ all: true }),
+            ),
+          }),
+        ],
+      }),
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useClass: TypeOrmConfigService,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'mysql' as const,
+        host: config.get<string>('GP_DB_HOST'),
+        port: Number(config.get('GP_DB_PORT')),
+        username: config.get<string>('GP_DB_USER'),
+        password: config.get<string>('GP_DB_PASSWORD'),
+        database: config.get<string>('GP_DB_NAME'),
+        entities: [OrderEntity, VoteEntity],
+        synchronize: true,
+      }),
     }),
-    ThrottlerModule.forRoot({
-      ttl: 60,
-      limit: 200,
+    TypeOrmModule.forRootAsync({
+      name: 'minecraft',
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'mysql' as const,
+        host: config.get<string>('MC_DB_HOST'),
+        port: Number(config.get('MC_DB_PORT')),
+        username: config.get<string>('MC_DB_USER'),
+        password: config.get<string>('MC_DB_PASSWORD'),
+        database: config.get<string>('MC_DB_NAME'),
+        entities: [LimboAuthPlayer],
+        synchronize: false,
+      }),
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 200,
+      },
+    ]),
     HealthModule,
     PlayerModule,
-    ContactsModule,
-    PermissionsModule,
-    OrdersModule,
-    RconModule,
-    ProductsModule,
     VotesModule,
-    PaymentsModule,
     AuthModule,
+    BridgeModule,
+    ShopModule,
   ],
   controllers: [AppController],
 })

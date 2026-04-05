@@ -1,35 +1,15 @@
-version: '3.3'
-
 services:
-  nestjs:
-    build: ./
+  api:
+    build: .
     container_name: gp_be
-    environment:
-      HOST: ${HOST}
-      PORT: ${PORT}
-      JWT_SECRET: ${JWT_SECRET}
-      FE_URL: ${FE_URL}
-      RCON_HOST: ${RCON_HOST}
-      RCON_PORT: ${RCON_PORT}
-      RCON_PASSWORD: ${RCON_PASSWORD}
-      MYSQL_HOST: ${MYSQL_HOST}
-      MYSQL_PORT: ${MYSQL_PORT}
-      MYSQL_NAME: ${MYSQL_NAME}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MOJANG_API: ${MOJANG_API}
-      MCHEAD_API: ${MCHEAD_API}
-      EASYDONATE_SHOP_KEY: ${EASYDONATE_SHOP_KEY}
-      LIQPAY_PUBLIC_KEY: ${LIQPAY_PUBLIC_KEY}
-      LIQPAY_PRIVATE_KEY: ${LIQPAY_PRIVATE_KEY}
-      LIQPAY_SERVER_URL: ${LIQPAY_SERVER_URL}
-      HOTMC_SECRET_KEY: ${HOTMC_SECRET_KEY}
-      MINESERV_SECRET_KEY: ${MINESERV_SECRET_KEY}
-      MCMONITOR_SECRET_KEY: ${MCMONITOR_SECRET_KEY}
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-    networks:
-      - nestjs_network
-
-networks:
-  nestjs_network:
+      - "${PORT:-4000}:${PORT:-4000}"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:${PORT:-4000}/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

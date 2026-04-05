@@ -1,17 +1,16 @@
-import { CacheModule, Logger, Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { HttpModule } from '@nestjs/axios';
 
 import { PlayerService } from './player.service';
 import { PlayerController } from './player.controller';
-import { PlayerEntity } from './player.entity';
+import { LimboAuthPlayer } from '../auth/entities/limboauth-player.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PlayerEntity]),
+    TypeOrmModule.forFeature([LimboAuthPlayer], 'minecraft'),
     ConfigModule,
-    HttpModule,
     CacheModule.register(),
   ],
   providers: [Logger, PlayerService],
