@@ -136,19 +136,19 @@ export class ShopService {
 
     const { variant } = found;
 
-    try {
-      for (const cmdTemplate of variant.commands) {
-        const command = cmdTemplate.replace(/{player}/g, order.playerName);
-        await this.bridgeService.execute(order.server, command);
+    for (const cmdTemplate of variant.commands) {
+      const command = cmdTemplate.replace(/{player}/g, order.playerName);
+      const result = await this.bridgeService.execute(order.server, command);
+      if (!result.success) {
+        this.logger.error(`Command failed for order ${order.id}: ${result.message}`);
+        order.status = OrderStatus.FAILED;
+        await this.orderRepository.save(order);
+        return;
       }
-
-      order.status = OrderStatus.DELIVERED;
-      await this.orderRepository.save(order);
-      this.logger.log(`Order ${order.id} delivered to ${order.playerName}`);
-    } catch (error) {
-      this.logger.error(`Failed to deliver order ${order.id}: ${error}`);
-      order.status = OrderStatus.FAILED;
-      await this.orderRepository.save(order);
     }
+
+    order.status = OrderStatus.DELIVERED;
+    await this.orderRepository.save(order);
+    this.logger.log(`Order ${order.id} delivered to ${order.playerName}`);
   }
 }
