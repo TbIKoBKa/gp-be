@@ -6,7 +6,7 @@ import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 
 import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
 import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto';
-import { McMonitorVoteHandlerDto } from './dto/mcmonitor-vote-handler.dto';
+import { McServeraVoteHandlerDto } from './dto/mcservera-vote-handler.dto';
 import { VoteEntity, VoteSource } from './entities/vote.entity';
 import { VoteBalanceEntity } from './entities/vote-balance.entity';
 
@@ -142,8 +142,8 @@ export class VotesService {
     return 'done';
   }
 
-  async mcMonitorHandler({ id, name, sign, sandbox }: McMonitorVoteHandlerDto) {
-    const secret = this.configService.get('MCMONITOR_SECRET_KEY');
+  async mcServeraHandler({ id, name, sign, sandbox }: McServeraVoteHandlerDto) {
+    const secret = this.configService.get('MCSERVERA_SECRET_KEY');
 
     if (sandbox !== '1') {
       const calculatedSign = crypto
@@ -156,7 +156,7 @@ export class VotesService {
       }
 
       if (name) {
-        await this.handleVote(name, VoteSource.MC_MONITOR);
+        await this.handleVote(name, VoteSource.MC_SERVERA);
       }
     }
 

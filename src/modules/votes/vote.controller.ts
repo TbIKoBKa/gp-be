@@ -14,7 +14,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { VotesService } from './votes.service';
 import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
 import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto';
-import { McMonitorVoteHandlerDto } from './dto/mcmonitor-vote-handler.dto';
+import { McServeraVoteHandlerDto } from './dto/mcservera-vote-handler.dto';
 import { PaginationInterceptor } from '../../utils';
 
 @ApiTags('votes')
@@ -66,10 +66,10 @@ export class VotesController {
     return this.votesService.mineservHandler(voteHandlerDto);
   }
 
-  @Post('handler/mc-monitor')
+  @Post('handler/mc-servera')
   @HttpCode(HttpStatus.OK)
-  mcMonitorHandler(@Body() voteHandlerDto: McMonitorVoteHandlerDto) {
-    return this.votesService.mcMonitorHandler(voteHandlerDto);
+  mcServeraHandler(@Body() voteHandlerDto: McServeraVoteHandlerDto) {
+    return this.votesService.mcServeraHandler(voteHandlerDto);
   }
 
 }
