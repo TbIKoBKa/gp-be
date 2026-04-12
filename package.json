@@ -11,6 +11,7 @@
     "@nestjs/core": "11.1.17",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "11.1.17",
+    "@nestjs/schedule": "^6.1.1",
     "@nestjs/swagger": "11.2.6",
     "@nestjs/terminus": "11.1.1",
     "@nestjs/throttler": "6.5.0",
@@ -43,7 +44,6 @@
     "cross-env": "10.1.0",
     "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
-    "typescript-eslint": "^8.33.0",
     "husky": "^9.1.7",
     "jest": "30.3.0",
     "prettier": "^3.8.1",
@@ -51,7 +51,8 @@
     "ts-jest": "29.4.6",
     "ts-node": "10.9.2",
     "tsc-watch": "7.2.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.33.0"
   },
   "scripts": {
     "build": "tsc",

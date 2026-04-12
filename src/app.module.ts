@@ -1,6 +1,7 @@
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { Logger, Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -14,11 +15,14 @@ import { VotesModule } from './modules/votes/votes.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ShopModule } from './modules/shop/shop.module';
 import { BridgeModule } from './modules/bridge/bridge.module';
+import { MonitoringModule } from './modules/monitoring/monitoring.module';
 
 import { LimboAuthPlayer } from './modules/auth/entities/limboauth-player.entity';
 import { OrderEntity } from './modules/shop/entities/order.entity';
 import { VoteEntity } from './modules/votes/entities/vote.entity';
 import { VoteBalanceEntity } from './modules/votes/entities/vote-balance.entity';
+import { ServerStatusLogEntity } from './modules/monitoring/entities/server-status-log.entity';
+import { ServerStatusHourlyEntity } from './modules/monitoring/entities/server-status-hourly.entity';
 
 @Module({
   providers: [
@@ -69,7 +73,7 @@ import { VoteBalanceEntity } from './modules/votes/entities/vote-balance.entity'
         username: config.get<string>('GP_DB_USER'),
         password: config.get<string>('GP_DB_PASSWORD'),
         database: config.get<string>('GP_DB_NAME'),
-        entities: [OrderEntity, VoteEntity, VoteBalanceEntity],
+        entities: [OrderEntity, VoteEntity, VoteBalanceEntity, ServerStatusLogEntity, ServerStatusHourlyEntity],
         synchronize: true,
       }),
     }),
@@ -88,6 +92,7 @@ import { VoteBalanceEntity } from './modules/votes/entities/vote-balance.entity'
         synchronize: false,
       }),
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
@@ -100,6 +105,7 @@ import { VoteBalanceEntity } from './modules/votes/entities/vote-balance.entity'
     AuthModule,
     BridgeModule,
     ShopModule,
+    MonitoringModule,
   ],
   controllers: [AppController],
 })
