@@ -38,7 +38,7 @@ export class VotesService {
     return balance ?? { nickname: nickname.toLowerCase(), balance: 0, totalVotes: 0 };
   }
 
-  async getGlobalStats() {
+  async getGlobalStats(days = 30) {
     const totalVotes = await this.voteEntityRepository.count();
 
     const totalPlayers = await this.voteBalanceRepository.count();
@@ -48,7 +48,35 @@ export class VotesService {
       take: 20,
     });
 
-    return { totalVotes, totalPlayers, topPlayers };
+    const byDayRaw = await this.voteEntityRepository
+      .createQueryBuilder('vote')
+      .select('DATE(vote.created_at)', 'date')
+      .addSelect('COUNT(*)', 'count')
+      .where('vote.created_at >= DATE_SUB(NOW(), INTERVAL :days DAY)', { days })
+      .groupBy('DATE(vote.created_at)')
+      .orderBy('date', 'ASC')
+      .getRawMany();
+
+    const byDay = byDayRaw.map((r: { date: string; count: string }) => ({
+      date: r.date,
+      count: parseInt(r.count, 10),
+    }));
+
+    const topForPeriodRaw = await this.voteEntityRepository
+      .createQueryBuilder('vote')
+      .select('vote.nickname', 'nickname')
+      .addSelect('COUNT(*)', 'votes')
+      .where('vote.created_at >= DATE_SUB(NOW(), INTERVAL :days DAY)', { days })
+      .groupBy('vote.nickname')
+      .orderBy('votes', 'DESC')
+      .getRawMany();
+
+    const topForPeriod = topForPeriodRaw.map((r: { nickname: string; votes: string }) => ({
+      nickname: r.nickname,
+      votes: parseInt(r.votes, 10),
+    }));
+
+    return { totalVotes, totalPlayers, topPlayers, byDay, topForPeriod };
   }
 
   async getPlayerStats(nickname: string, from?: string, to?: string) {

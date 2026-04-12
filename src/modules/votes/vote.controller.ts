@@ -34,8 +34,8 @@ export class VotesController {
   }
 
   @Get('stats')
-  getGlobalStats() {
-    return this.votesService.getGlobalStats();
+  getGlobalStats(@Query('days') days?: number) {
+    return this.votesService.getGlobalStats(days ? Number(days) : undefined);
   }
 
   @Get('stats/:nickname')
