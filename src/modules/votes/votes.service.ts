@@ -6,7 +6,6 @@ import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 
 import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
 import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto';
-import { McServeraVoteHandlerDto } from './dto/mcservera-vote-handler.dto';
 import { VoteEntity, VoteSource } from './entities/vote.entity';
 import { VoteBalanceEntity } from './entities/vote-balance.entity';
 
@@ -140,27 +139,6 @@ export class VotesService {
     await this.handleVote(username, VoteSource.MINESERV);
 
     return 'done';
-  }
-
-  async mcServeraHandler({ id, name, sign, sandbox }: McServeraVoteHandlerDto) {
-    const secret = this.configService.get('MCSERVERA_SECRET_KEY');
-
-    if (sandbox !== '1') {
-      const calculatedSign = crypto
-        .createHash('sha1')
-        .update(name + secret + id)
-        .digest('hex');
-
-      if (calculatedSign !== sign) {
-        throw new UnauthorizedException();
-      }
-
-      if (name) {
-        await this.handleVote(name, VoteSource.MC_SERVERA);
-      }
-    }
-
-    return { status: 1, message: 'OK', queryIndex: 0 };
   }
 
   // --- Core vote logic ---

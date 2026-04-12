@@ -18,7 +18,6 @@ declare global {
       GP_DB_PASSWORD: string;
       HOTMC_SECRET_KEY: string;
       MINESERV_SECRET_KEY: string;
-      MCSERVERA_SECRET_KEY: string;
       FREEKASSA_MERCHANT_ID: string;
       FREEKASSA_SECRET1: string;
       FREEKASSA_SECRET2: string;

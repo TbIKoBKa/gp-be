@@ -3,7 +3,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeor
 export enum VoteSource {
   HOTMC = 'hotmc',
   MINESERV = 'mineserv',
-  MC_SERVERA = 'mc-servera',
 }
 
 @Entity({ name: 'votes' })
