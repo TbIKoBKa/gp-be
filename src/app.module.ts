@@ -18,6 +18,7 @@ import { BridgeModule } from './modules/bridge/bridge.module';
 import { LimboAuthPlayer } from './modules/auth/entities/limboauth-player.entity';
 import { OrderEntity } from './modules/shop/entities/order.entity';
 import { VoteEntity } from './modules/votes/entities/vote.entity';
+import { VoteBalanceEntity } from './modules/votes/entities/vote-balance.entity';
 
 @Module({
   providers: [
@@ -68,7 +69,7 @@ import { VoteEntity } from './modules/votes/entities/vote.entity';
         username: config.get<string>('GP_DB_USER'),
         password: config.get<string>('GP_DB_PASSWORD'),
         database: config.get<string>('GP_DB_NAME'),
-        entities: [OrderEntity, VoteEntity],
+        entities: [OrderEntity, VoteEntity, VoteBalanceEntity],
         synchronize: true,
       }),
     }),

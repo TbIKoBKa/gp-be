@@ -4,6 +4,7 @@ import {
   Body,
   Get,
   Param,
+  Query,
   HttpStatus,
   HttpCode,
   UseInterceptors,
@@ -12,7 +13,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { VotesService } from './votes.service';
 import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
-import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto copy';
+import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto';
 import { McMonitorVoteHandlerDto } from './dto/mcmonitor-vote-handler.dto';
 import { PaginationInterceptor } from '../../utils';
 
@@ -27,11 +28,32 @@ export class VotesController {
     return this.votesService.getVotes({});
   }
 
+  @Get('balance/:nickname')
+  getBalance(@Param('nickname') nickname: string) {
+    return this.votesService.getBalance(nickname);
+  }
+
+  @Get('stats')
+  getGlobalStats() {
+    return this.votesService.getGlobalStats();
+  }
+
+  @Get('stats/:nickname')
+  getPlayerStats(
+    @Param('nickname') nickname: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.votesService.getPlayerStats(nickname, from, to);
+  }
+
   @Get(':nickname')
   @UseInterceptors(PaginationInterceptor)
   getVoteByNickname(@Param('nickname') nickname: string) {
     return this.votesService.getVoteByNickname(nickname);
   }
+
+  // --- Vote handlers (callbacks from monitoring services) ---
 
   @Post('handler/hot-mc')
   hotMcHandler(@Body() voteHandlerDto: HotmcVoteHandlerDto) {
@@ -49,4 +71,5 @@ export class VotesController {
   mcMonitorHandler(@Body() voteHandlerDto: McMonitorVoteHandlerDto) {
     return this.votesService.mcMonitorHandler(voteHandlerDto);
   }
+
 }

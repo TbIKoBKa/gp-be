@@ -1,4 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+export enum VoteSource {
+  HOTMC = 'hotmc',
+  MINESERV = 'mineserv',
+  MC_MONITOR = 'mc-monitor',
+}
 
 @Entity({ name: 'votes' })
 export class VoteEntity {
@@ -8,6 +14,9 @@ export class VoteEntity {
   @Column({ type: 'varchar' })
   public nickname: string;
 
-  @Column({ type: 'varchar', name: 'created_at' })
-  public createdAt: string;
+  @Column({ type: 'varchar', nullable: true })
+  public source: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  public createdAt: Date;
 }
