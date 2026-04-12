@@ -9,6 +9,7 @@ import {
   HttpCode,
   UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 
 import { VotesService } from './votes.service';
@@ -55,6 +56,7 @@ export class VotesController {
   // --- Vote handlers (callbacks from monitoring services) ---
 
   @Post('handler/hot-mc')
+  @UseInterceptors(FileInterceptor(''))
   hotMcHandler(@Body() voteHandlerDto: HotmcVoteHandlerDto) {
     return this.votesService.hotMcHandler(voteHandlerDto);
   }
