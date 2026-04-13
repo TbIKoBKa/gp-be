@@ -13,6 +13,11 @@ export class ShopController {
     return this.shopService.getProducts();
   }
 
+  @Get('stats')
+  getStats() {
+    return this.shopService.getStats();
+  }
+
   @Post('orders')
   createOrder(@Body() dto: CreateOrderDto) {
     return this.shopService.createOrder(dto);

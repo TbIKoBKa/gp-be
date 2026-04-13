@@ -82,6 +82,13 @@ export class ShopService {
     return this.orderRepository.findOne({ where: { id } });
   }
 
+  async getStats() {
+    const count = await this.orderRepository.count({
+      where: { status: OrderStatus.DELIVERED },
+    });
+    return { transactionsCount: count };
+  }
+
   async handleWebhook(
     ip: string,
     body: Record<string, string>,
