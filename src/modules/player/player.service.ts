@@ -6,6 +6,8 @@ import { LimboAuthPlayer } from '../auth/entities/limboauth-player.entity';
 
 interface PlayerSearchDto {
   nickname?: string;
+  page?: number;
+  limit?: number;
 }
 
 @Injectable()
@@ -31,7 +33,11 @@ export class PlayerService {
       });
     }
 
-    qb.take(20);
+    qb.orderBy('auth.regDate', 'DESC');
+
+    const limit = Math.min(dto.limit || 100, 100);
+    const skip = ((dto.page || 1) - 1) * limit;
+    qb.skip(skip).take(limit);
 
     const [players, count] = await qb.getManyAndCount();
     return [players.map(this.sanitize), count];

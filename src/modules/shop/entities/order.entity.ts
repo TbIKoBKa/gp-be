@@ -30,6 +30,9 @@ export class OrderEntity {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
+  @Column({ default: 'RUB' })
+  currency: string;
+
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
 

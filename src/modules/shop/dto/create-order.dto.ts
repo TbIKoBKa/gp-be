@@ -1,4 +1,6 @@
-import { IsNotEmpty, IsString, Matches, MaxLength } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+
+export type Currency = 'RUB' | 'UAH' | 'USD';
 
 export class CreateOrderDto {
   @IsString()
@@ -10,4 +12,9 @@ export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
   variantId: string;
+
+  @IsString()
+  @IsIn(['RUB', 'UAH', 'USD'])
+  @IsOptional()
+  currency?: Currency;
 }

@@ -8,12 +8,11 @@ import { PaginationInterceptor } from '../../utils';
 
 @ApiTags('players')
 @Controller('/players')
-@UseInterceptors(CacheInterceptor)
 export class PlayerController {
   constructor(private readonly playerService: PlayerService) {}
 
   @Get('/')
-  @UseInterceptors(PaginationInterceptor)
+  @UseInterceptors(CacheInterceptor, PaginationInterceptor)
   public search(@Query() dto: PlayerSearchDto) {
     return this.playerService.search(dto);
   }

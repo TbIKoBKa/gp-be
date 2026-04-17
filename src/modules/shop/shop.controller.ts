@@ -18,6 +18,11 @@ export class ShopController {
     return this.shopService.getStats();
   }
 
+  @Get('rates')
+  getRates() {
+    return this.shopService.getRates();
+  }
+
   @Post('orders')
   createOrder(@Body() dto: CreateOrderDto) {
     return this.shopService.createOrder(dto);

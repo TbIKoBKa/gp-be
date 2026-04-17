@@ -11,7 +11,7 @@ import { LimboAuthPlayer } from '../auth/entities/limboauth-player.entity';
   imports: [
     TypeOrmModule.forFeature([LimboAuthPlayer], 'minecraft'),
     ConfigModule,
-    CacheModule.register(),
+    CacheModule.register({ ttl: 30000 }),
   ],
   providers: [Logger, PlayerService],
   controllers: [PlayerController],

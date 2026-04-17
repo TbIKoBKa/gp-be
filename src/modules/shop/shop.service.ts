@@ -5,9 +5,10 @@ import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
 
 import { OrderEntity, OrderStatus } from './entities/order.entity';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { CreateOrderDto, Currency } from './dto/create-order.dto';
 import { catalog, findVariant } from './catalog';
 import { BridgeService } from '../bridge/bridge.service';
+import { CurrencyService } from '../currency/currency.service';
 
 const FREEKASSA_IPS = [
   '168.119.157.136',
@@ -25,6 +26,7 @@ export class ShopService {
     private readonly orderRepository: Repository<OrderEntity>,
     private readonly configService: ConfigService,
     private readonly bridgeService: BridgeService,
+    private readonly currencyService: CurrencyService,
   ) {}
 
   getProducts() {
@@ -44,6 +46,10 @@ export class ShopService {
     if (!found) throw new BadRequestException('Unknown variant');
 
     const { product, variant } = found;
+    const currency: Currency = dto.currency || 'RUB';
+
+    // Convert price from RUB to selected currency
+    const convertedAmount = await this.currencyService.convert(variant.price, 'RUB', currency);
 
     const order = await this.orderRepository.save({
       playerName: dto.playerName,
@@ -51,13 +57,13 @@ export class ShopService {
       variantId: variant.id,
       productName: product.name,
       variantLabel: variant.label,
-      amount: variant.price,
+      amount: convertedAmount,
+      currency,
     });
 
     const merchantId = this.configService.get<string>('FREEKASSA_MERCHANT_ID');
     const secret1 = this.configService.get<string>('FREEKASSA_SECRET1');
-    const amount = variant.price.toFixed(2);
-    const currency = 'RUB';
+    const amount = convertedAmount.toFixed(2);
 
     const sign = createHash('md5')
       .update(`${merchantId}:${amount}:${secret1}:${currency}:${order.id}`)
@@ -76,6 +82,10 @@ export class ShopService {
       orderId: order.id,
       paymentUrl: paymentUrl.toString(),
     };
+  }
+
+  async getRates() {
+    return this.currencyService.getRates();
   }
 
   async getOrder(id: number) {
@@ -97,7 +107,7 @@ export class ShopService {
       throw new ForbiddenException('Invalid source IP');
     }
 
-    const { AMOUNT, intid, SIGN, MERCHANT_ORDER_ID } = body;
+    const { AMOUNT, CUR, intid, SIGN, MERCHANT_ORDER_ID } = body;
 
     const merchantId = this.configService.get<string>('FREEKASSA_MERCHANT_ID');
     const secret2 = this.configService.get<string>('FREEKASSA_SECRET2');
@@ -117,6 +127,29 @@ export class ShopService {
     if (!order) {
       this.logger.warn(`Order ${orderId} not found`);
       throw new BadRequestException('Order not found');
+    }
+
+    // Validate currency matches
+    if (CUR && CUR !== order.currency) {
+      this.logger.warn(
+        `Currency mismatch for order ${orderId}: expected ${order.currency}, got ${CUR}`,
+      );
+      order.status = OrderStatus.FAILED;
+      await this.orderRepository.save(order);
+      throw new BadRequestException('Currency mismatch');
+    }
+
+    // Validate amount matches (allow 0.01 tolerance for floating point)
+    const paidAmount = parseFloat(AMOUNT);
+    const expectedAmount = Number(order.amount);
+
+    if (Math.abs(paidAmount - expectedAmount) > 0.01) {
+      this.logger.warn(
+        `Amount mismatch for order ${orderId}: expected ${expectedAmount}, got ${paidAmount}`,
+      );
+      order.status = OrderStatus.FAILED;
+      await this.orderRepository.save(order);
+      throw new BadRequestException('Amount mismatch');
     }
 
     if (order.status !== OrderStatus.PENDING) {
