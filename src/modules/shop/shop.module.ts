@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 
 import { ShopController } from './shop.controller';
 import { ShopService } from './shop.service';
@@ -12,6 +13,7 @@ import { CurrencyModule } from '../currency/currency.module';
   imports: [
     TypeOrmModule.forFeature([OrderEntity]),
     ConfigModule,
+    JwtModule.register({}),
     BridgeModule,
     CurrencyModule,
   ],

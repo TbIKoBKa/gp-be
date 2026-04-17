@@ -16,6 +16,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ShopModule } from './modules/shop/shop.module';
 import { BridgeModule } from './modules/bridge/bridge.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 import { LimboAuthPlayer } from './modules/auth/entities/limboauth-player.entity';
 import { OrderEntity } from './modules/shop/entities/order.entity';
@@ -106,6 +107,7 @@ import { ServerStatusHourlyEntity } from './modules/monitoring/entities/server-s
     BridgeModule,
     ShopModule,
     MonitoringModule,
+    AdminModule,
   ],
   controllers: [AppController],
 })

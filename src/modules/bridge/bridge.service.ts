@@ -74,14 +74,19 @@ export class BridgeService implements OnModuleInit, OnModuleDestroy {
       this.reconnectAttempt = 0;
       this.logger.log('Connected to bridge, authenticating...');
       const secret = this.configService.get<string>('BRIDGE_SECRET');
-      this.ws!.send(JSON.stringify({ type: 'auth', secret, role: 'api' }));
+      const authPayload = JSON.stringify({ type: 'auth', secret, role: 'api' });
+      this.logger.log(`Sending auth payload (secret masked)`);
+      this.ws!.send(authPayload);
     });
 
     this.ws.on('message', (raw: WebSocket.RawData) => {
-      this.handleMessage(raw.toString());
+      const text = raw.toString();
+      this.logger.log(`Bridge message received: ${text}`);
+      this.handleMessage(text);
     });
 
-    this.ws.on('close', () => {
+    this.ws.on('close', (code: number, reason: Buffer) => {
+      this.logger.warn(`Bridge closed: code=${code}, reason=${reason.toString()}`);
       this.authenticated = false;
       this.scheduleReconnect();
     });

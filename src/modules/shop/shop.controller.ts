@@ -1,8 +1,26 @@
-import { Body, Controller, Get, Ip, Param, ParseIntPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Ip,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+  Req,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
+import { Request } from 'express';
 
 import { ShopService } from './shop.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt';
+
+interface AuthenticatedRequest extends Request {
+  user: { nickname: string; uuid: string };
+}
 
 @Controller('shop')
 export class ShopController {
@@ -29,8 +47,22 @@ export class ShopController {
   }
 
   @Get('orders/:id')
-  getOrder(@Param('id', ParseIntPipe) id: number) {
-    return this.shopService.getOrder(id);
+  @UseGuards(JwtAuthGuard)
+  async getOrder(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const order = await this.shopService.getOrder(id);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.playerName.toLowerCase() !== req.user.nickname.toLowerCase()) {
+      throw new ForbiddenException('You can only view your own orders');
+    }
+
+    return order;
   }
 
   @SkipThrottle()
