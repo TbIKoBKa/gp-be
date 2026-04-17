@@ -5,6 +5,7 @@ declare global {
       HOST: string;
       PORT: number;
       FE_URL: string;
+      ADMIN_FE_URL: string;
       JWT_SECRET: string;
       MC_DB_HOST: string;
       MC_DB_PORT: number;

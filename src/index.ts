@@ -19,10 +19,11 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   const feUrl = config.get<string>('FE_URL', 'http://localhost:3000');
+  const adminFeUrl = config.get<string>('ADMIN_FE_URL', 'http://localhost:3001');
   const isDev = process.env.NODE_ENV === 'development';
 
   app.enableCors({
-    origin: isDev ? true : [feUrl],
+    origin: isDev ? true : [feUrl, adminFeUrl],
     credentials: true,
     exposedHeaders: ['Content-Disposition'],
   });
