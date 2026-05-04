@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import crypto from 'crypto';
@@ -14,6 +14,8 @@ import { VoteBalanceEntity } from './entities/vote-balance.entity';
 
 @Injectable()
 export class VotesService {
+  private readonly logger = new Logger(VotesService.name);
+
   constructor(
     @InjectRepository(VoteEntity)
     private readonly voteEntityRepository: Repository<VoteEntity>,
@@ -174,39 +176,68 @@ export class VotesService {
   }
 
   async tmonitoringHandler({ hash, id }: TmonitoringVoteHandlerDto) {
+    this.logger.log(`TMonitoring callback received: hash=${hash}, id=${id}`);
+
     if (!hash || hash.length !== 32) {
+      this.logger.warn(`TMonitoring invalid hash length: ${hash?.length}`);
       throw new UnauthorizedException('Invalid hash');
     }
 
-    const { data } = await firstValueFrom(
-      this.httpService.get<string>(
-        `https://tmonitoring.com/api/check/${hash}?id=${id}`,
-        { responseType: 'text' },
-      ),
-    );
+    let rawData: string;
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.get<string>(
+          `https://tmonitoring.com/api/check/${hash}?id=${id}`,
+          { responseType: 'text' },
+        ),
+      );
+      rawData = typeof data === 'string' ? data : JSON.stringify(data);
+    } catch (err) {
+      this.logger.error(`TMonitoring API check failed: ${err}`);
+      throw new UnauthorizedException('API check failed');
+    }
 
-    const parsed = this.parseTMonitoringSerialized(data);
+    this.logger.log(`TMonitoring API response: ${rawData}`);
+
+    const parsed = this.parseTMonitoringResponse(rawData);
+    this.logger.log(`TMonitoring parsed: ${JSON.stringify(parsed)}`);
 
     if (!parsed.hash || parsed.hash.length !== 32 || parsed.hash !== hash) {
+      this.logger.warn(`TMonitoring hash mismatch: expected=${hash}, got=${parsed.hash}`);
       throw new UnauthorizedException('Hash mismatch');
     }
 
     if (!parsed.username) {
+      this.logger.warn('TMonitoring username not found in response');
       throw new UnauthorizedException('Username not found');
     }
 
     await this.handleVote(parsed.username, VoteSource.TMONITORING);
+    this.logger.log(`TMonitoring vote recorded for ${parsed.username}`);
 
     return 'ok';
   }
 
-  private parseTMonitoringSerialized(raw: string): Record<string, string> {
+  private parseTMonitoringResponse(raw: string): Record<string, string> {
+    try {
+      const json = JSON.parse(raw);
+      if (json && typeof json === 'object') {
+        return json;
+      }
+    } catch {
+      // Not JSON, try PHP serialized format
+    }
+
     const result: Record<string, string> = {};
-    const regex = /s:\d+:"([^"]+)";s:\d+:"([^"]+)";/g;
+    const regex = /s:\d+:"([^"]*?)";s:\d+:"([^"]*?)";/g;
     let match: RegExpExecArray | null;
 
     while ((match = regex.exec(raw)) !== null) {
       result[match[1]] = match[2];
+    }
+
+    if (Object.keys(result).length === 0) {
+      this.logger.warn(`TMonitoring could not parse response: ${raw}`);
     }
 
     return result;

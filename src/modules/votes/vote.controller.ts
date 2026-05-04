@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 
 import { VotesService } from './votes.service';
 import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
@@ -55,18 +56,21 @@ export class VotesController {
 
   // --- Vote handlers (callbacks from monitoring services) ---
 
+  @SkipThrottle()
   @Post('handler/hot-mc')
   @UseInterceptors(FileInterceptor(''))
   hotMcHandler(@Body() voteHandlerDto: HotmcVoteHandlerDto) {
     return this.votesService.hotMcHandler(voteHandlerDto);
   }
 
+  @SkipThrottle()
   @Post('handler/mineserv')
   @HttpCode(HttpStatus.OK)
   mineservHandler(@Body() voteHandlerDto: MineservVoteHandlerDto) {
     return this.votesService.mineservHandler(voteHandlerDto);
   }
 
+  @SkipThrottle()
   @Get('handler/tmonitoring')
   tmonitoringHandler(
     @Query('hash') hash: string,
