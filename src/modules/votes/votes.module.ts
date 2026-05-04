@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 
 import { VotesService } from './votes.service';
 import { VotesController } from './vote.controller';
@@ -12,6 +13,7 @@ import { VoteBalanceEntity } from './entities/vote-balance.entity';
   providers: [VotesService],
   imports: [
     ConfigModule,
+    HttpModule,
     TypeOrmModule.forFeature([VoteEntity, VoteBalanceEntity]),
   ],
 })

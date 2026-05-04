@@ -1,11 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 import crypto from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+import { firstValueFrom } from 'rxjs';
 
 import { MineservVoteHandlerDto } from './dto/mineserv-vote-handler.dto';
 import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto';
+import { TmonitoringVoteHandlerDto } from './dto/tmonitoring-vote-handler.dto';
 import { VoteEntity, VoteSource } from './entities/vote.entity';
 import { VoteBalanceEntity } from './entities/vote-balance.entity';
 
@@ -18,6 +21,7 @@ export class VotesService {
     private readonly voteBalanceRepository: Repository<VoteBalanceEntity>,
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
+    private readonly httpService: HttpService,
   ) {}
 
   async getVotes(where: FindOptionsWhere<VoteEntity>) {
@@ -167,6 +171,45 @@ export class VotesService {
     await this.handleVote(username, VoteSource.MINESERV);
 
     return 'done';
+  }
+
+  async tmonitoringHandler({ hash, id }: TmonitoringVoteHandlerDto) {
+    if (!hash || hash.length !== 32) {
+      throw new UnauthorizedException('Invalid hash');
+    }
+
+    const { data } = await firstValueFrom(
+      this.httpService.get<string>(
+        `https://tmonitoring.com/api/check/${hash}?id=${id}`,
+        { responseType: 'text' },
+      ),
+    );
+
+    const parsed = this.parseTMonitoringSerialized(data);
+
+    if (!parsed.hash || parsed.hash.length !== 32 || parsed.hash !== hash) {
+      throw new UnauthorizedException('Hash mismatch');
+    }
+
+    if (!parsed.username) {
+      throw new UnauthorizedException('Username not found');
+    }
+
+    await this.handleVote(parsed.username, VoteSource.TMONITORING);
+
+    return 'ok';
+  }
+
+  private parseTMonitoringSerialized(raw: string): Record<string, string> {
+    const result: Record<string, string> = {};
+    const regex = /s:\d+:"([^"]+)";s:\d+:"([^"]+)";/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(raw)) !== null) {
+      result[match[1]] = match[2];
+    }
+
+    return result;
   }
 
   // --- Core vote logic ---

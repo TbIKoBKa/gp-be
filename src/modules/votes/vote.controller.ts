@@ -67,4 +67,12 @@ export class VotesController {
     return this.votesService.mineservHandler(voteHandlerDto);
   }
 
+  @Get('handler/tmonitoring')
+  tmonitoringHandler(
+    @Query('hash') hash: string,
+    @Query('id') id: number,
+  ) {
+    return this.votesService.tmonitoringHandler({ hash, id });
+  }
+
 }
