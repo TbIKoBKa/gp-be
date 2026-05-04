@@ -5,10 +5,12 @@ import {
   Get,
   Param,
   Query,
+  Req,
   HttpStatus,
   HttpCode,
   UseInterceptors,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
@@ -73,10 +75,15 @@ export class VotesController {
   @SkipThrottle()
   @Get('handler/tmonitoring')
   tmonitoringHandler(
+    @Req() req: Request,
     @Query('hash') hash: string,
     @Query('id') id: number,
   ) {
-    return this.votesService.tmonitoringHandler({ hash, id });
+    return this.votesService.tmonitoringHandler({ hash, id }, {
+      url: req.originalUrl,
+      query: req.query,
+      method: req.method,
+    });
   }
 
 }

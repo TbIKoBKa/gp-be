@@ -175,8 +175,11 @@ export class VotesService {
     return 'done';
   }
 
-  async tmonitoringHandler({ hash, id }: TmonitoringVoteHandlerDto) {
-    this.logger.log(`TMonitoring callback received: hash=${hash}, id=${id}`);
+  async tmonitoringHandler(
+    { hash, id }: TmonitoringVoteHandlerDto,
+    rawReq?: { url: string; query: Record<string, unknown>; method: string },
+  ) {
+    this.logger.log(`TMonitoring callback: method=${rawReq?.method}, url=${rawReq?.url}, query=${JSON.stringify(rawReq?.query)}, hash=${hash}, id=${id}`);
 
     if (!hash || hash.length !== 32) {
       this.logger.warn(`TMonitoring invalid hash length: ${hash?.length}`);
