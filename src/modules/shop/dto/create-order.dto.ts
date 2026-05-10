@@ -1,6 +1,6 @@
 import { IsIn, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
-export type Currency = 'RUB' | 'UAH' | 'USD';
+export type Currency = 'RUB' | 'UAH' | 'USD' | 'GOCOIN';
 
 export class CreateOrderDto {
   @IsString()
@@ -14,7 +14,7 @@ export class CreateOrderDto {
   variantId: string;
 
   @IsString()
-  @IsIn(['RUB', 'UAH', 'USD'])
+  @IsIn(['RUB', 'UAH', 'USD', 'GOCOIN'])
   @IsOptional()
   currency?: Currency;
 }

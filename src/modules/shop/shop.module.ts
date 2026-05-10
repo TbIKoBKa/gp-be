@@ -6,16 +6,19 @@ import { JwtModule } from '@nestjs/jwt';
 import { ShopController } from './shop.controller';
 import { ShopService } from './shop.service';
 import { OrderEntity } from './entities/order.entity';
+import { VoteBalanceEntity } from '../votes/entities/vote-balance.entity';
 import { BridgeModule } from '../bridge/bridge.module';
 import { CurrencyModule } from '../currency/currency.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrderEntity]),
+    TypeOrmModule.forFeature([OrderEntity, VoteBalanceEntity]),
     ConfigModule,
     JwtModule.register({}),
     BridgeModule,
     CurrencyModule,
+    SettingsModule,
   ],
   controllers: [ShopController],
   providers: [ShopService],

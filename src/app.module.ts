@@ -17,6 +17,10 @@ import { ShopModule } from './modules/shop/shop.module';
 import { BridgeModule } from './modules/bridge/bridge.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { SettingEntity } from './modules/settings/entities/setting.entity';
+import { LuckModule } from './modules/luck/luck.module';
+import { LuckSpinEntity } from './modules/luck/entities/luck-spin.entity';
 
 import { LimboAuthPlayer } from './modules/auth/entities/limboauth-player.entity';
 import { OrderEntity } from './modules/shop/entities/order.entity';
@@ -74,7 +78,7 @@ import { ServerStatusHourlyEntity } from './modules/monitoring/entities/server-s
         username: config.get<string>('GP_DB_USER'),
         password: config.get<string>('GP_DB_PASSWORD'),
         database: config.get<string>('GP_DB_NAME'),
-        entities: [OrderEntity, VoteEntity, VoteBalanceEntity, ServerStatusLogEntity, ServerStatusHourlyEntity],
+        entities: [OrderEntity, VoteEntity, VoteBalanceEntity, ServerStatusLogEntity, ServerStatusHourlyEntity, SettingEntity, LuckSpinEntity],
         synchronize: true,
       }),
     }),
@@ -108,6 +112,8 @@ import { ServerStatusHourlyEntity } from './modules/monitoring/entities/server-s
     ShopModule,
     MonitoringModule,
     AdminModule,
+    SettingsModule,
+    LuckModule,
   ],
   controllers: [AppController],
 })

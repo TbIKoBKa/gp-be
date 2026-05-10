@@ -12,6 +12,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 
 import { ShopService } from './shop.service';
@@ -24,7 +26,23 @@ interface AuthenticatedRequest extends Request {
 
 @Controller('shop')
 export class ShopController {
-  constructor(private readonly shopService: ShopService) {}
+  constructor(
+    private readonly shopService: ShopService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  private extractUser(req: Request): { nickname: string; uuid: string } | undefined {
+    const token = req.cookies?.['access_token'];
+    if (!token) return undefined;
+    try {
+      return this.jwtService.verify(token, {
+        secret: this.configService.get('JWT_SECRET'),
+      }) as { nickname: string; uuid: string };
+    } catch {
+      return undefined;
+    }
+  }
 
   @Get('products')
   getProducts() {
@@ -42,8 +60,9 @@ export class ShopController {
   }
 
   @Post('orders')
-  createOrder(@Body() dto: CreateOrderDto) {
-    return this.shopService.createOrder(dto);
+  createOrder(@Body() dto: CreateOrderDto, @Req() req: Request) {
+    const user = this.extractUser(req);
+    return this.shopService.createOrder(dto, user?.nickname);
   }
 
   @Get('orders/:id')

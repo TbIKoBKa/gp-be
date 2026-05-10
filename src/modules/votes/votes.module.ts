@@ -14,5 +14,6 @@ import { VoteBalanceEntity } from './entities/vote-balance.entity';
     ConfigModule,
     TypeOrmModule.forFeature([VoteEntity, VoteBalanceEntity]),
   ],
+  exports: [TypeOrmModule],
 })
 export class VotesModule {}

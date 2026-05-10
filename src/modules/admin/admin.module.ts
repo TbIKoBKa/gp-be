@@ -8,6 +8,7 @@ import { VoteEntity } from '../votes/entities/vote.entity';
 import { VoteBalanceEntity } from '../votes/entities/vote-balance.entity';
 import { LimboAuthPlayer } from '../auth/entities/limboauth-player.entity';
 import { BridgeModule } from '../bridge/bridge.module';
+import { SettingsModule } from '../settings/settings.module';
 
 import { AdminController } from './admin.controller';
 import { AdminAuthController } from './admin-auth.controller';
@@ -20,6 +21,7 @@ import { AdminService } from './admin.service';
     JwtModule.register({}),
     ConfigModule,
     BridgeModule,
+    SettingsModule,
   ],
   controllers: [AdminController, AdminAuthController],
   providers: [AdminService],

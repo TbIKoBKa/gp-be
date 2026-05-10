@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Param, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Post, Body, Param, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 import { AdminJwtGuard } from '../../common/guards/admin-jwt.guard';
+import { SettingsService } from '../settings/settings.service';
 import { AdminService } from './admin.service';
 import { GetOrdersDto, ExecuteCommandDto, PaginationDto, GetPlayersDto, GetVotesDto } from './dto';
 
@@ -12,7 +13,10 @@ import { GetOrdersDto, ExecuteCommandDto, PaginationDto, GetPlayersDto, GetVotes
 @UseGuards(AdminJwtGuard)
 @SkipThrottle()
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly settingsService: SettingsService,
+  ) {}
 
   @Get('orders')
   getOrders(@Query() query: GetOrdersDto) {
@@ -57,5 +61,15 @@ export class AdminController {
   @Get('stats/overview')
   getOverviewStats() {
     return this.adminService.getOverviewStats();
+  }
+
+  @Get('settings')
+  getSettings() {
+    return this.settingsService.getAll();
+  }
+
+  @Put('settings')
+  updateSettings(@Body() body: Record<string, string>) {
+    return this.settingsService.updateMany(body);
   }
 }

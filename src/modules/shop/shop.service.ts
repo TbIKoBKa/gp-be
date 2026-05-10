@@ -1,6 +1,6 @@
 import { Injectable, Logger, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
 
@@ -9,6 +9,8 @@ import { CreateOrderDto, Currency } from './dto/create-order.dto';
 import { catalog, findVariant } from './catalog';
 import { BridgeService } from '../bridge/bridge.service';
 import { CurrencyService } from '../currency/currency.service';
+import { VoteBalanceEntity } from '../votes/entities/vote-balance.entity';
+import { SettingsService, SettingKey } from '../settings/settings.service';
 
 const FREEKASSA_IPS = [
   '168.119.157.136',
@@ -24,9 +26,13 @@ export class ShopService {
   constructor(
     @InjectRepository(OrderEntity)
     private readonly orderRepository: Repository<OrderEntity>,
+    @InjectRepository(VoteBalanceEntity)
+    private readonly voteBalanceRepository: Repository<VoteBalanceEntity>,
     private readonly configService: ConfigService,
     private readonly bridgeService: BridgeService,
     private readonly currencyService: CurrencyService,
+    private readonly settingsService: SettingsService,
+    private readonly dataSource: DataSource,
   ) {}
 
   getProducts() {
@@ -41,14 +47,17 @@ export class ShopService {
     }));
   }
 
-  async createOrder(dto: CreateOrderDto) {
+  async createOrder(dto: CreateOrderDto, authenticatedNickname?: string) {
     const found = findVariant(dto.variantId);
     if (!found) throw new BadRequestException('Unknown variant');
 
     const { product, variant } = found;
     const currency: Currency = dto.currency || 'RUB';
 
-    // Convert price from RUB to selected currency
+    if (currency === 'GOCOIN') {
+      return this.createGocoinOrder(dto, product, variant, authenticatedNickname);
+    }
+
     const convertedAmount = await this.currencyService.convert(variant.price, 'RUB', currency);
 
     const order = await this.orderRepository.save({
@@ -81,6 +90,60 @@ export class ShopService {
     return {
       orderId: order.id,
       paymentUrl: paymentUrl.toString(),
+    };
+  }
+
+  private async createGocoinOrder(
+    dto: CreateOrderDto,
+    product: { server: string; name: string },
+    variant: { id: string; label: string; price: number; commands: string[] },
+    authenticatedNickname?: string,
+  ) {
+    if (!authenticatedNickname) {
+      throw new BadRequestException('Authentication required for GoCoin payment');
+    }
+
+    if (dto.playerName.toLowerCase() !== authenticatedNickname.toLowerCase()) {
+      throw new BadRequestException('GoCoin payment is only available for your own account');
+    }
+
+    const rate = await this.settingsService.getNumber(SettingKey.GOCOIN_TO_RUB_RATE);
+    const gocoinsNeeded = Math.ceil(variant.price / rate);
+
+    const nickname = dto.playerName.toLowerCase();
+
+    const order = await this.dataSource.transaction(async (manager) => {
+      const balance = await manager.findOne(VoteBalanceEntity, {
+        where: { nickname },
+      });
+
+      if (!balance || balance.balance < gocoinsNeeded) {
+        throw new BadRequestException(
+          `Insufficient GoCoin balance. Need ${gocoinsNeeded}, have ${balance?.balance ?? 0}`,
+        );
+      }
+
+      await manager.decrement(VoteBalanceEntity, { nickname }, 'balance', gocoinsNeeded);
+
+      const newOrder = await manager.save(OrderEntity, {
+        playerName: dto.playerName,
+        server: product.server,
+        variantId: variant.id,
+        productName: product.name,
+        variantLabel: variant.label,
+        amount: gocoinsNeeded,
+        currency: 'GOCOIN',
+        status: OrderStatus.PAID,
+      });
+
+      return newOrder;
+    });
+
+    await this.deliverOrder(order);
+
+    return {
+      orderId: order.id,
+      paymentUrl: null,
     };
   }
 
