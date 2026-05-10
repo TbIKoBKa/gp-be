@@ -1,13 +1,8 @@
-import { Controller, Get, Post, Put, Body, UseGuards, Req, Query } from '@nestjs/common';
-import { Request } from 'express';
+import { Controller, Get, Post, Put, Body, UseGuards, Query } from '@nestjs/common';
 
-import { JwtAuthGuard } from '../../common/guards/jwt';
-import { AdminJwtGuard } from '../../common/guards/admin-jwt.guard';
+import { JwtAuthGuard, AdminJwtGuard } from '../../common/guards';
+import { CurrentUser, UserPayload } from '../../common/decorators';
 import { LuckService, PrizeWeights } from './luck.service';
-
-interface AuthenticatedRequest extends Request {
-  user: { nickname: string; uuid: string };
-}
 
 @Controller('luck')
 export class LuckController {
@@ -20,19 +15,19 @@ export class LuckController {
 
   @Post('spin')
   @UseGuards(JwtAuthGuard)
-  spin(@Req() req: AuthenticatedRequest) {
-    return this.luckService.spin(req.user.nickname);
+  spin(@CurrentUser() user: UserPayload) {
+    return this.luckService.spin(user.nickname);
   }
 
   @Get('history')
   @UseGuards(JwtAuthGuard)
   getHistory(
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: UserPayload,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
     return this.luckService.getHistory(
-      req.user.nickname,
+      user.nickname,
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
     );

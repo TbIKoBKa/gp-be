@@ -7,42 +7,19 @@ import {
   ParseIntPipe,
   Post,
   UseGuards,
-  Req,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
 
 import { ShopService } from './shop.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt';
-
-interface AuthenticatedRequest extends Request {
-  user: { nickname: string; uuid: string };
-}
+import { JwtAuthGuard, OptionalJwtAuthGuard } from '../../common/guards';
+import { CurrentUser, UserPayload } from '../../common/decorators';
 
 @Controller('shop')
 export class ShopController {
-  constructor(
-    private readonly shopService: ShopService,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
-  ) {}
-
-  private extractUser(req: Request): { nickname: string; uuid: string } | undefined {
-    const token = req.cookies?.['access_token'];
-    if (!token) return undefined;
-    try {
-      return this.jwtService.verify(token, {
-        secret: this.configService.get('JWT_SECRET'),
-      }) as { nickname: string; uuid: string };
-    } catch {
-      return undefined;
-    }
-  }
+  constructor(private readonly shopService: ShopService) {}
 
   @Get('products')
   getProducts() {
@@ -60,8 +37,8 @@ export class ShopController {
   }
 
   @Post('orders')
-  createOrder(@Body() dto: CreateOrderDto, @Req() req: Request) {
-    const user = this.extractUser(req);
+  @UseGuards(OptionalJwtAuthGuard)
+  createOrder(@Body() dto: CreateOrderDto, @CurrentUser() user?: UserPayload) {
     return this.shopService.createOrder(dto, user?.nickname);
   }
 
@@ -69,7 +46,7 @@ export class ShopController {
   @UseGuards(JwtAuthGuard)
   async getOrder(
     @Param('id', ParseIntPipe) id: number,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: UserPayload,
   ) {
     const order = await this.shopService.getOrder(id);
 
@@ -77,7 +54,7 @@ export class ShopController {
       throw new NotFoundException('Order not found');
     }
 
-    if (order.playerName.toLowerCase() !== req.user.nickname.toLowerCase()) {
+    if (order.playerName.toLowerCase() !== user.nickname.toLowerCase()) {
       throw new ForbiddenException('You can only view your own orders');
     }
 

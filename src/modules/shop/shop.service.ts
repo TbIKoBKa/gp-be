@@ -103,18 +103,15 @@ export class ShopService {
       throw new BadRequestException('Authentication required for GoCoin payment');
     }
 
-    if (dto.playerName.toLowerCase() !== authenticatedNickname.toLowerCase()) {
-      throw new BadRequestException('GoCoin payment is only available for your own account');
-    }
-
     const rate = await this.settingsService.getNumber(SettingKey.GOCOIN_TO_RUB_RATE);
     const gocoinsNeeded = Math.ceil(variant.price / rate);
 
-    const nickname = dto.playerName.toLowerCase();
+    // Use authenticated user's balance, but deliver to target player
+    const payerNickname = authenticatedNickname.toLowerCase();
 
     const order = await this.dataSource.transaction(async (manager) => {
       const balance = await manager.findOne(VoteBalanceEntity, {
-        where: { nickname },
+        where: { nickname: payerNickname },
       });
 
       if (!balance || balance.balance < gocoinsNeeded) {
@@ -123,7 +120,7 @@ export class ShopService {
         );
       }
 
-      await manager.decrement(VoteBalanceEntity, { nickname }, 'balance', gocoinsNeeded);
+      await manager.decrement(VoteBalanceEntity, { nickname: payerNickname }, 'balance', gocoinsNeeded);
 
       const newOrder = await manager.save(OrderEntity, {
         playerName: dto.playerName,
@@ -139,6 +136,7 @@ export class ShopService {
       return newOrder;
     });
 
+    console.log('🚀 ~ ShopService ~ createGocoinOrder ~ order:', order)
     await this.deliverOrder(order);
 
     return {
