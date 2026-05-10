@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum VoteSource {
   HOTMC = 'hotmc',
@@ -16,6 +16,6 @@ export class VoteEntity {
   @Column({ type: 'varchar', nullable: true })
   public source: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @Column({ name: 'created_at', type: 'timestamp' })
   public createdAt: Date;
 }

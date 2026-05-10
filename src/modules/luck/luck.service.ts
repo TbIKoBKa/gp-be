@@ -77,6 +77,7 @@ export class LuckService {
         nickname: lowerNickname,
         prizeType: prize.prizeType,
         prizeAmount: prize.amount,
+        createdAt: new Date(),
       });
 
       const newBalance = await manager.findOne(VoteBalanceEntity, {

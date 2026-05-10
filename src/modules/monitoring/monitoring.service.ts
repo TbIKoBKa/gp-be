@@ -42,6 +42,7 @@ export class MonitoringService {
         online: data.online,
         playersOnline: data.players?.online ?? 0,
         playersMax: data.players?.max ?? 0,
+        createdAt: new Date(),
       });
     } catch (error) {
       this.logger.error('Failed to poll server status', (error as Error).message);
@@ -50,6 +51,7 @@ export class MonitoringService {
         online: false,
         playersOnline: 0,
         playersMax: 0,
+        createdAt: new Date(),
       });
     }
   }

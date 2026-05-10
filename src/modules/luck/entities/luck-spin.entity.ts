@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum LuckPrizeType {
   NOTHING = 'NOTHING',
@@ -19,6 +19,6 @@ export class LuckSpinEntity {
   @Column({ type: 'int', default: 0 })
   public prizeAmount: number;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @Column({ name: 'created_at', type: 'timestamp' })
   public createdAt: Date;
 }

@@ -60,6 +60,7 @@ export class ShopService {
 
     const convertedAmount = await this.currencyService.convert(variant.price, 'RUB', currency);
 
+    const now = new Date();
     const order = await this.orderRepository.save({
       playerName: dto.playerName,
       server: product.server,
@@ -68,6 +69,8 @@ export class ShopService {
       variantLabel: variant.label,
       amount: convertedAmount,
       currency,
+      createdAt: now,
+      updatedAt: now,
     });
 
     const merchantId = this.configService.get<string>('FREEKASSA_MERCHANT_ID');
@@ -122,6 +125,7 @@ export class ShopService {
 
       await manager.decrement(VoteBalanceEntity, { nickname: payerNickname }, 'balance', gocoinsNeeded);
 
+      const now = new Date();
       const newOrder = await manager.save(OrderEntity, {
         playerName: dto.playerName,
         server: product.server,
@@ -131,6 +135,8 @@ export class ShopService {
         amount: gocoinsNeeded,
         currency: 'GOCOIN',
         status: OrderStatus.PAID,
+        createdAt: now,
+        updatedAt: now,
       });
 
       return newOrder;
@@ -196,6 +202,7 @@ export class ShopService {
         `Currency mismatch for order ${orderId}: expected ${order.currency}, got ${CUR}`,
       );
       order.status = OrderStatus.FAILED;
+      order.updatedAt = new Date();
       await this.orderRepository.save(order);
       throw new BadRequestException('Currency mismatch');
     }
@@ -209,6 +216,7 @@ export class ShopService {
         `Amount mismatch for order ${orderId}: expected ${expectedAmount}, got ${paidAmount}`,
       );
       order.status = OrderStatus.FAILED;
+      order.updatedAt = new Date();
       await this.orderRepository.save(order);
       throw new BadRequestException('Amount mismatch');
     }
@@ -219,6 +227,7 @@ export class ShopService {
 
     order.status = OrderStatus.PAID;
     order.fkOrderId = intid;
+    order.updatedAt = new Date();
     await this.orderRepository.save(order);
 
     await this.deliverOrder(order);
@@ -231,6 +240,7 @@ export class ShopService {
     if (!found) {
       this.logger.error(`Variant ${order.variantId} not found for order ${order.id}`);
       order.status = OrderStatus.FAILED;
+      order.updatedAt = new Date();
       await this.orderRepository.save(order);
       return;
     }
@@ -243,12 +253,14 @@ export class ShopService {
       if (!result.success) {
         this.logger.error(`Command failed for order ${order.id}: ${result.message}`);
         order.status = OrderStatus.FAILED;
+        order.updatedAt = new Date();
         await this.orderRepository.save(order);
         return;
       }
     }
 
     order.status = OrderStatus.DELIVERED;
+    order.updatedAt = new Date();
     await this.orderRepository.save(order);
     this.logger.log(`Order ${order.id} delivered to ${order.playerName}`);
   }

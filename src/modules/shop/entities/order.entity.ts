@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum OrderStatus {
   PENDING = 'pending',
@@ -42,9 +42,9 @@ export class OrderEntity {
   @Column({ nullable: true })
   paymentMethod: string;
 
-  @CreateDateColumn()
+  @Column({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @Column({ type: 'timestamp' })
   updatedAt: Date;
 }

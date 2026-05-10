@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'server_status_logs' })
 export class ServerStatusLogEntity {
@@ -15,6 +15,6 @@ export class ServerStatusLogEntity {
   public playersMax: number;
 
   @Index()
-  @CreateDateColumn({ name: 'created_at' })
+  @Column({ name: 'created_at', type: 'timestamp' })
   public createdAt: Date;
 }

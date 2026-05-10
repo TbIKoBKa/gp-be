@@ -178,6 +178,7 @@ export class VotesService {
       await manager.save(VoteEntity, {
         nickname: lowerNickname,
         source,
+        createdAt: new Date(),
       });
 
       const existing = await manager.findOne(VoteBalanceEntity, {

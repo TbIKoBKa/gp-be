@@ -21,6 +21,7 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { SettingEntity } from './modules/settings/entities/setting.entity';
 import { LuckModule } from './modules/luck/luck.module';
 import { LuckSpinEntity } from './modules/luck/entities/luck-spin.entity';
+import { DatabaseModule } from './modules/database/database.module';
 
 import { LimboAuthPlayer } from './modules/auth/entities/limboauth-player.entity';
 import { OrderEntity } from './modules/shop/entities/order.entity';
@@ -80,6 +81,7 @@ import { ServerStatusHourlyEntity } from './modules/monitoring/entities/server-s
         database: config.get<string>('GP_DB_NAME'),
         entities: [OrderEntity, VoteEntity, VoteBalanceEntity, ServerStatusLogEntity, ServerStatusHourlyEntity, SettingEntity, LuckSpinEntity],
         synchronize: true,
+        timezone: '+00:00',
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -95,6 +97,7 @@ import { ServerStatusHourlyEntity } from './modules/monitoring/entities/server-s
         database: config.get<string>('MC_DB_NAME'),
         entities: [LimboAuthPlayer],
         synchronize: false,
+        timezone: '+00:00',
       }),
     }),
     ScheduleModule.forRoot(),
@@ -114,6 +117,7 @@ import { ServerStatusHourlyEntity } from './modules/monitoring/entities/server-s
     AdminModule,
     SettingsModule,
     LuckModule,
+    DatabaseModule,
   ],
   controllers: [AppController],
 })

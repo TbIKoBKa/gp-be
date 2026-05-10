@@ -1,0 +1,5 @@
+{
+  "executedMigrations": [
+    "convert-timestamps-to-utc.sql"
+  ]
+}
