@@ -329,6 +329,34 @@ export const catalog: Product[] = [
       },
     ],
   },
+  {
+    id: 'vanilla-sponsor',
+    type: ProductType.PRIVILEGE,
+    server: 'vanilla',
+    name: 'СПОНСОР',
+    image: '/images/shop/vanilla-sponsor.png',
+    description: '/scale, /ptime, /pweather, /hat, /sv, /bc, 12 чанков, 10 приватов, косметика',
+    variants: [
+      {
+        id: 'vanilla-sponsor-1m',
+        label: '1 мес',
+        price: 199,
+        commands: [`lp user {player} parent addtemp sponsor 30d vanilla`],
+      },
+      {
+        id: 'vanilla-sponsor-3m',
+        label: '3 мес',
+        price: 549,
+        commands: [`lp user {player} parent addtemp sponsor 90d vanilla`],
+      },
+      {
+        id: 'vanilla-sponsor-6m',
+        label: '6 мес',
+        price: 999,
+        commands: [`lp user {player} parent addtemp sponsor 180d vanilla`],
+      },
+    ],
+  },
 ];
 
 export function findVariant(variantId: string): { product: Product; variant: ProductVariant } | null {
