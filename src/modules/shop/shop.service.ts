@@ -27,6 +27,12 @@ interface PlisioInvoiceResponse {
 
 const LAVA_API = 'https://gate.lava.top/api/v3';
 
+const LAVA_MIN_AMOUNT: Record<'RUB' | 'USD' | 'EUR', number> = {
+  RUB: 50,
+  USD: 5,
+  EUR: 5,
+};
+
 interface LavaInvoiceResponse {
   id: string;
   status?: string;
@@ -218,9 +224,12 @@ export class ShopService {
       throw new BadRequestException('Lava.top is not configured');
     }
 
-    // Lava.top invoices settle in RUB/USD/EUR only — map UAH to USD.
     const lavaCurrency: 'RUB' | 'USD' = currency === 'RUB' ? 'RUB' : 'USD';
     const convertedAmount = await this.currencyService.convert(variant.price, 'RUB', lavaCurrency);
+
+    if (convertedAmount < LAVA_MIN_AMOUNT[lavaCurrency]) {
+      throw new BadRequestException('Amount too low for card payment');
+    }
 
     const now = new Date();
     const order = await this.orderRepository.save({
