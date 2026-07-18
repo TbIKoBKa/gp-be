@@ -2,7 +2,7 @@ import {
   Body,
   Controller,
   Get,
-  Ip,
+  Headers,
   Param,
   ParseIntPipe,
   Post,
@@ -62,8 +62,17 @@ export class ShopController {
   }
 
   @SkipThrottle()
-  @Post('webhook')
-  handleWebhook(@Ip() ip: string, @Body() body: Record<string, string>) {
-    return this.shopService.handleWebhook(ip, body);
+  @Post('webhook/plisio')
+  handlePlisioWebhook(@Body() body: Record<string, string>) {
+    return this.shopService.handlePlisioWebhook(body);
+  }
+
+  @SkipThrottle()
+  @Post('webhook/lava')
+  handleLavaWebhook(
+    @Headers('x-api-key') apiKey: string,
+    @Body() body: Record<string, any>,
+  ) {
+    return this.shopService.handleLavaWebhook(apiKey, body);
   }
 }

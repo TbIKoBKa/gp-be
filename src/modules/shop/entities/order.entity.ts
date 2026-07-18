@@ -37,7 +37,7 @@ export class OrderEntity {
   status: OrderStatus;
 
   @Column({ nullable: true })
-  fkOrderId: string;
+  providerTxnId: string;
 
   @Column({ nullable: true })
   paymentMethod: string;
