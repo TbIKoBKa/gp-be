@@ -25,7 +25,7 @@ interface PlisioInvoiceResponse {
   data?: { txn_id?: string; invoice_url?: string };
 }
 
-const LAVA_API = 'https://gate.lava.top/api/v2';
+const LAVA_API = 'https://gate.lava.top/api/v3';
 
 interface LavaInvoiceResponse {
   id: string;
@@ -255,10 +255,21 @@ export class ShopService {
       );
       invoice = data;
     } catch (err) {
-      this.logger.error(`Lava.top request failed for order ${order.id}: ${(err as Error).message}`);
+      const e = err as {
+        message?: string;
+        response?: { status?: number; data?: unknown };
+      };
+      this.logger.error(
+        `Lava.top request failed for order ${order.id}: ${e.message} ` +
+          `(status ${e.response?.status}, offerId ${offerId}, ` +
+          `body ${JSON.stringify(e.response?.data)})`,
+      );
     }
 
     if (!invoice?.paymentUrl) {
+      this.logger.error(
+        `Lava.top returned no paymentUrl for order ${order.id}: ${JSON.stringify(invoice)}`,
+      );
       order.status = OrderStatus.FAILED;
       order.updatedAt = new Date();
       await this.orderRepository.save(order);
