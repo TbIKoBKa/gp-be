@@ -172,8 +172,8 @@ export class ShopService {
       source_currency: currency,
       source_amount: amount,
       callback_url: `${backendUrl}/shop/webhook/plisio?json=true`,
-      success_callback_url: `${feUrl}/shop/success?order=${order.id}`,
-      fail_callback_url: `${feUrl}/shop/fail?order=${order.id}`,
+      success_callback_url: `${feUrl}/shop?payment=success&order=${order.id}`,
+      fail_callback_url: `${feUrl}/shop?payment=fail&order=${order.id}`,
       email: '',
     };
 
