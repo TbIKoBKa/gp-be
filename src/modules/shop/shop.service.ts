@@ -83,6 +83,11 @@ export class ShopService {
       return this.createPlisioOrder(dto, product, variant, currency);
     }
 
+    // СБП (Fast Payment System) — Lava.top with the SBP method, rubles only.
+    if (dto.paymentMethod === 'sbp') {
+      return this.createLavaOrder(dto, product, variant, 'RUB', 'SBP');
+    }
+
     // Default card provider for fiat orders: Lava.top (RU + international cards).
     return this.createLavaOrder(dto, product, variant, currency);
   }
@@ -217,6 +222,7 @@ export class ShopService {
     product: { server: string; name: string },
     variant: { id: string; label: string; price: number },
     currency: Exclude<Currency, 'GOCOIN'>,
+    lavaMethod?: 'SBP',
   ) {
     const apiKey = this.configService.get<string>('LAVA_API_KEY');
     const offerId = this.configService.get<string>('LAVA_OFFER_ID');
@@ -224,7 +230,9 @@ export class ShopService {
       throw new BadRequestException('Lava.top is not configured');
     }
 
-    const lavaCurrency: 'RUB' | 'USD' = currency === 'RUB' ? 'RUB' : 'USD';
+    // SBP (provider pay2me) is a rubles-only Russian rail — always settle in RUB.
+    const lavaCurrency: 'RUB' | 'USD' =
+      lavaMethod === 'SBP' ? 'RUB' : currency === 'RUB' ? 'RUB' : 'USD';
     const convertedAmount = await this.currencyService.convert(variant.price, 'RUB', lavaCurrency);
 
     if (convertedAmount < LAVA_MIN_AMOUNT[lavaCurrency]) {
@@ -240,19 +248,21 @@ export class ShopService {
       variantLabel: variant.label,
       amount: convertedAmount,
       currency: lavaCurrency,
-      paymentMethod: 'lava',
+      paymentMethod: lavaMethod === 'SBP' ? 'sbp' : 'lava',
       createdAt: now,
       updatedAt: now,
     });
 
     // `amount` is honoured only for offers published as "Цена по запросу через API"
     // (custom price) — keeps the catalog the single source of truth for pricing.
+    // `paymentMethod: SBP` routes to the pay2me СБП flow instead of the card form.
     const payload = {
       email: `order-${order.id}@goplay.pay`,
       offerId,
       currency: lavaCurrency,
       amount: Number(convertedAmount.toFixed(2)),
       buyerLanguage: 'RU',
+      ...(lavaMethod ? { paymentMethod: lavaMethod } : {}),
     };
 
     let invoice: LavaInvoiceResponse | undefined;
