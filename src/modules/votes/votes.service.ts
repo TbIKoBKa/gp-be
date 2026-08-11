@@ -171,15 +171,42 @@ export class VotesService {
 
   // --- Core vote logic ---
 
-  async handleVote(nickname: string, source: VoteSource) {
+  /** `externalId` makes the call idempotent. Returns true when the vote was actually credited. */
+  async handleVote(
+    nickname: string,
+    source: VoteSource,
+    options?: { createdAt?: Date; externalId?: string },
+  ): Promise<boolean> {
     const lowerNickname = nickname.toLowerCase();
+    const createdAt = options?.createdAt ?? new Date();
+    const externalId = options?.externalId;
 
-    await this.dataSource.transaction(async (manager) => {
-      await manager.save(VoteEntity, {
-        nickname: lowerNickname,
-        source,
-        createdAt: new Date(),
-      });
+    return this.dataSource.transaction(async (manager) => {
+      if (externalId) {
+        const insertResult = await manager
+          .createQueryBuilder()
+          .insert()
+          .into(VoteEntity)
+          .values({ nickname: lowerNickname, source, externalId, createdAt })
+          .orIgnore()
+          .updateEntity(false)
+          .execute();
+
+        // INSERT IGNORE: affectedRows is 1 on a real insert and 0 on a duplicate key.
+        // insertId is unusable here — it stays 0 on a skipped row.
+        const affectedRows =
+          (insertResult.raw as { affectedRows?: number } | undefined)?.affectedRows ?? 0;
+
+        if (affectedRows === 0) {
+          return false;
+        }
+      } else {
+        await manager.save(VoteEntity, {
+          nickname: lowerNickname,
+          source,
+          createdAt,
+        });
+      }
 
       const existing = await manager.findOne(VoteBalanceEntity, {
         where: { nickname: lowerNickname },
@@ -195,6 +222,8 @@ export class VotesService {
           totalVotes: 1,
         });
       }
+
+      return true;
     });
   }
 }
