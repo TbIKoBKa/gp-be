@@ -22,8 +22,11 @@ async function bootstrap() {
   const adminFeUrl = config.get<string>('ADMIN_FE_URL', 'http://localhost:3001');
   const isDev = process.env.NODE_ENV === 'development';
 
+  const extraOrigins = config.get<string>('EXTRA_CORS_ORIGINS', '')
+    .split(',').map((o) => o.trim()).filter(Boolean);
+  
   app.enableCors({
-    origin: isDev ? true : [feUrl, adminFeUrl],
+    origin: isDev ? true : [feUrl, adminFeUrl, ...extraOrigins],
     credentials: true,
     exposedHeaders: ['Content-Disposition'],
   });
