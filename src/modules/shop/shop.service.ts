@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { createHmac } from 'crypto';
 
 import { OrderEntity, OrderStatus } from './entities/order.entity';
-import { CreateOrderDto, Currency } from './dto/create-order.dto';
+import { CreateOrderDto, Currency, PaymentMethod } from './dto/create-order.dto';
 import { catalog, findVariant, Product, ProductVariant } from './catalog';
 import { BridgeService } from '../bridge/bridge.service';
 import { CurrencyService } from '../currency/currency.service';
@@ -27,10 +27,26 @@ interface PlisioInvoiceResponse {
 
 const LAVA_API = 'https://gate.lava.top/api/v3';
 
-const LAVA_MIN_AMOUNT: Record<'RUB' | 'USD' | 'EUR', number> = {
+type LavaCurrency = 'RUB' | 'USD';
+type LavaMethod = Exclude<PaymentMethod, 'crypto'>;
+
+const LAVA_MIN_AMOUNT: Record<LavaCurrency, number> = {
   RUB: 50,
   USD: 5,
-  EUR: 5,
+};
+
+// Routing per rail, from the POST /api/v3/invoice contract (CreateInvoiceV3Request).
+// `paymentProvider` is omitted wherever Lava's own default for the settlement
+// currency is already the right provider — SMART_GLOCAL for RUB, UNLIMINT for USD —
+// so we never have to name a provider whose spelling the docs are inconsistent about.
+const LAVA_METHODS: Record<
+  LavaMethod,
+  { currencies: LavaCurrency[]; payload: Record<string, string> }
+> = {
+  lava: { currencies: ['RUB', 'USD'], payload: {} },
+  sbp: { currencies: ['RUB'], payload: { paymentMethod: 'SBP' } },
+  paypal: { currencies: ['USD'], payload: { paymentProvider: 'PAYPAL' } },
+  applepay: { currencies: ['USD'], payload: { paymentMethod: 'APPLE_PAY' } },
 };
 
 interface LavaInvoiceResponse {
@@ -95,13 +111,19 @@ export class ShopService {
       return this.createPlisioOrder(dto, product, variant, currency);
     }
 
-    // СБП (Fast Payment System) — Lava.top with the SBP method, rubles only.
-    if (dto.paymentMethod === 'sbp') {
-      return this.createLavaOrder(dto, product, variant, 'RUB', 'SBP');
-    }
+    // Every remaining fiat rail goes through Lava.top; cards are the default.
+    return this.createLavaOrder(dto, product, variant, currency, dto.paymentMethod ?? 'lava');
+  }
 
-    // Default card provider for fiat orders: Lava.top (RU + international cards).
-    return this.createLavaOrder(dto, product, variant, currency);
+  // Each rail settles in a fixed set of currencies. UAH is a display-only
+  // currency here, so anything that is not roubles is charged in dollars.
+  private resolveLavaCurrency(
+    currency: Exclude<Currency, 'GOCOIN'>,
+    method: LavaMethod,
+  ): LavaCurrency {
+    const { currencies } = LAVA_METHODS[method];
+    const preferred: LavaCurrency = currency === 'RUB' ? 'RUB' : 'USD';
+    return currencies.includes(preferred) ? preferred : currencies[0];
   }
 
   // Products listed under a virtual section ('other') deliver on a real server.
@@ -239,7 +261,7 @@ export class ShopService {
     product: Product,
     variant: ProductVariant,
     currency: Exclude<Currency, 'GOCOIN'>,
-    lavaMethod?: 'SBP',
+    method: LavaMethod,
   ) {
     const apiKey = this.configService.get<string>('LAVA_API_KEY');
     const offerId = this.configService.get<string>('LAVA_OFFER_ID');
@@ -247,9 +269,7 @@ export class ShopService {
       throw new BadRequestException('Lava.top is not configured');
     }
 
-    // SBP (provider pay2me) is a rubles-only Russian rail — always settle in RUB.
-    const lavaCurrency: 'RUB' | 'USD' =
-      lavaMethod === 'SBP' ? 'RUB' : currency === 'RUB' ? 'RUB' : 'USD';
+    const lavaCurrency = this.resolveLavaCurrency(currency, method);
     const convertedAmount = await this.currencyService.convert(variant.price, 'RUB', lavaCurrency);
 
     if (convertedAmount < LAVA_MIN_AMOUNT[lavaCurrency]) {
@@ -265,21 +285,21 @@ export class ShopService {
       variantLabel: variant.label,
       amount: convertedAmount,
       currency: lavaCurrency,
-      paymentMethod: lavaMethod === 'SBP' ? 'sbp' : 'lava',
+      paymentMethod: method,
       createdAt: now,
       updatedAt: now,
     });
 
     // `amount` is honoured only for offers published as "Цена по запросу через API"
     // (custom price) — keeps the catalog the single source of truth for pricing.
-    // `paymentMethod: SBP` routes to the pay2me СБП flow instead of the card form.
+    // The spread picks the rail: СБП, PayPal or Apple Pay instead of the card form.
     const payload = {
       email: `order-${order.id}@goplay.pay`,
       offerId,
       currency: lavaCurrency,
       amount: Number(convertedAmount.toFixed(2)),
       buyerLanguage: 'RU',
-      ...(lavaMethod ? { paymentMethod: lavaMethod } : {}),
+      ...LAVA_METHODS[method].payload,
     };
 
     let invoice: LavaInvoiceResponse | undefined;

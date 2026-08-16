@@ -2,7 +2,7 @@ import { IsIn, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'clas
 
 export type Currency = 'RUB' | 'UAH' | 'USD' | 'GOCOIN';
 
-export type PaymentMethod = 'lava' | 'sbp' | 'crypto';
+export type PaymentMethod = 'lava' | 'sbp' | 'paypal' | 'applepay' | 'crypto';
 
 export class CreateOrderDto {
   @IsString()
@@ -20,10 +20,10 @@ export class CreateOrderDto {
   @IsOptional()
   currency?: Currency;
 
-  // 'lava' -> Lava.top cards (RU + international), 'sbp' -> Lava.top СБП (rubles),
+  // Everything but 'crypto' is a Lava.top rail (see LAVA_METHODS in the service);
   // 'crypto' -> Plisio (USDT/BTC/...). Ignored for GOCOIN. Defaults to 'lava' for fiat.
   @IsString()
-  @IsIn(['lava', 'sbp', 'crypto'])
+  @IsIn(['lava', 'sbp', 'paypal', 'applepay', 'crypto'])
   @IsOptional()
   paymentMethod?: PaymentMethod;
 }
