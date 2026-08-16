@@ -8,7 +8,7 @@ import { createHmac } from 'crypto';
 
 import { OrderEntity, OrderStatus } from './entities/order.entity';
 import { CreateOrderDto, Currency } from './dto/create-order.dto';
-import { catalog, findVariant } from './catalog';
+import { catalog, findVariant, Product, ProductVariant } from './catalog';
 import { BridgeService } from '../bridge/bridge.service';
 import { CurrencyService } from '../currency/currency.service';
 import { VoteBalanceEntity } from '../votes/entities/vote-balance.entity';
@@ -57,7 +57,7 @@ export class ShopService {
   ) {}
 
   getProducts() {
-    return catalog.map(({ id, type, server, name, image, description, variants }) => ({
+    return catalog.map(({ id, type, server, name, image, description, variants, range }) => ({
       id,
       type,
       server,
@@ -65,6 +65,18 @@ export class ShopService {
       image,
       description,
       variants: variants.map(({ id: vid, label, price }) => ({ id: vid, label, price })),
+      // Commands stay server-side; the client only needs the slider bounds.
+      ...(range
+        ? {
+            range: {
+              min: range.min,
+              max: range.max,
+              step: range.step,
+              pricePerUnit: range.pricePerUnit,
+              unitLabel: range.unitLabel,
+            },
+          }
+        : {}),
     }));
   }
 
@@ -92,10 +104,15 @@ export class ShopService {
     return this.createLavaOrder(dto, product, variant, currency);
   }
 
+  // Products listed under a virtual section ('other') deliver on a real server.
+  private deliveryServerOf(product: Product): string {
+    return product.deliveryServer ?? product.server;
+  }
+
   private async createGocoinOrder(
     dto: CreateOrderDto,
-    product: { server: string; name: string },
-    variant: { id: string; label: string; price: number; commands: string[] },
+    product: Product,
+    variant: ProductVariant,
     authenticatedNickname?: string,
   ) {
     if (!authenticatedNickname) {
@@ -124,7 +141,7 @@ export class ShopService {
       const now = new Date();
       const newOrder = await manager.save(OrderEntity, {
         playerName: dto.playerName,
-        server: product.server,
+        server: this.deliveryServerOf(product),
         variantId: variant.id,
         productName: product.name,
         variantLabel: variant.label,
@@ -149,8 +166,8 @@ export class ShopService {
 
   private async createPlisioOrder(
     dto: CreateOrderDto,
-    product: { server: string; name: string },
-    variant: { id: string; label: string; price: number },
+    product: Product,
+    variant: ProductVariant,
     currency: Exclude<Currency, 'GOCOIN'>,
   ) {
     const convertedAmount = await this.currencyService.convert(variant.price, 'RUB', currency);
@@ -158,7 +175,7 @@ export class ShopService {
     const now = new Date();
     const order = await this.orderRepository.save({
       playerName: dto.playerName,
-      server: product.server,
+      server: this.deliveryServerOf(product),
       variantId: variant.id,
       productName: product.name,
       variantLabel: variant.label,
@@ -219,8 +236,8 @@ export class ShopService {
 
   private async createLavaOrder(
     dto: CreateOrderDto,
-    product: { server: string; name: string },
-    variant: { id: string; label: string; price: number },
+    product: Product,
+    variant: ProductVariant,
     currency: Exclude<Currency, 'GOCOIN'>,
     lavaMethod?: 'SBP',
   ) {
@@ -242,7 +259,7 @@ export class ShopService {
     const now = new Date();
     const order = await this.orderRepository.save({
       playerName: dto.playerName,
-      server: product.server,
+      server: this.deliveryServerOf(product),
       variantId: variant.id,
       productName: product.name,
       variantLabel: variant.label,

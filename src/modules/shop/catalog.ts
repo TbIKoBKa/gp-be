@@ -1,22 +1,41 @@
 export enum ProductType {
   PRIVILEGE = 'privilege',
   CASE = 'case',
+  TOKEN = 'token',
+  SERVICE = 'service',
 }
 
 export interface Product {
   id: string;
   type: ProductType;
+  // Shop section the product is listed under ('grief', 'vanilla', 'other').
   server: string;
+  // Bridge target for the delivery commands; falls back to `server` when omitted.
+  // Lets the 'other' section (which is not a real server) deliver on grief.
+  deliveryServer?: string;
   name: string;
   image: string;
   description: string;
   variants: ProductVariant[];
+  // Slider-priced products carry a `range` instead of fixed `variants`.
+  range?: ProductRange;
 }
 
 export interface ProductVariant {
   id: string;
   label: string;
   price: number;
+  commands: string[];
+}
+
+export interface ProductRange {
+  min: number;
+  max: number;
+  step: number;
+  // Price of a single unit in RUB.
+  pricePerUnit: number;
+  unitLabel: string;
+  // Supports {player} and {amount} placeholders.
   commands: string[];
 }
 
@@ -330,6 +349,24 @@ export const catalog: Product[] = [
     ],
   },
   {
+    id: 'grief-tokens',
+    type: ProductType.TOKEN,
+    server: 'grief',
+    name: 'Жетоны',
+    image: '/images/shop/tokens.svg',
+    description: 'Внутриигровая валюта грифа — 0,10 ₽ за жетон',
+    variants: [],
+    range: {
+      // 500 жетонов = 50 ₽ — нижняя граница, которую принимает Lava.
+      min: 500,
+      max: 50000,
+      step: 100,
+      pricePerUnit: 0.1,
+      unitLabel: 'жетонов',
+      commands: [`points give {player} {amount}`],
+    },
+  },
+  {
     id: 'vanilla-sponsor',
     type: ProductType.PRIVILEGE,
     server: 'vanilla',
@@ -357,12 +394,114 @@ export const catalog: Product[] = [
       },
     ],
   },
+  {
+    id: 'unban',
+    type: ProductType.SERVICE,
+    server: 'other',
+    deliveryServer: 'grief',
+    name: 'Разбан',
+    image: '/images/shop/unban.svg',
+    description: 'Снятие блокировки аккаунта на сервере',
+    variants: [
+      {
+        id: 'unban-1',
+        label: 'Разбан',
+        price: 150,
+        commands: [`unban {player}`],
+      },
+    ],
+  },
+  {
+    id: 'unmute',
+    type: ProductType.SERVICE,
+    server: 'other',
+    deliveryServer: 'grief',
+    name: 'Размут',
+    image: '/images/shop/unmute.svg',
+    description: 'Снятие блокировки чата',
+    variants: [
+      {
+        id: 'unmute-1',
+        label: 'Размут',
+        price: 50,
+        commands: [`unmute {player}`],
+      },
+    ],
+  },
+  {
+    id: 'host-payment',
+    type: ProductType.SERVICE,
+    server: 'other',
+    name: 'Оплата хоста',
+    image: '/images/shop/host.svg',
+    description: 'Поддержка проекта — оплата хостинга серверов',
+    variants: [
+      {
+        id: 'host-payment-1',
+        label: 'Оплата хоста',
+        price: 10000,
+        commands: [],
+      },
+    ],
+  },
+  {
+    id: 'chips',
+    type: ProductType.SERVICE,
+    server: 'other',
+    name: 'На чипсы',
+    image: '/images/shop/chips.svg',
+    description: 'Добровольная поддержка команды проекта',
+    variants: [],
+    range: {
+      min: 50,
+      max: 5000,
+      step: 50,
+      pricePerUnit: 1,
+      unitLabel: '₽',
+      commands: [],
+    },
+  },
 ];
 
+// Slider-priced products have no pre-built variants, so their variantId carries
+// the picked amount: `<productId>:<amount>` (e.g. `grief-tokens:500`).
+const RANGE_SEPARATOR = ':';
+
 export function findVariant(variantId: string): { product: Product; variant: ProductVariant } | null {
+  const separatorIndex = variantId.indexOf(RANGE_SEPARATOR);
+
+  if (separatorIndex !== -1) {
+    const productId = variantId.slice(0, separatorIndex);
+    const amount = Number(variantId.slice(separatorIndex + 1));
+    const product = catalog.find((p) => p.id === productId && p.range);
+
+    if (!product) return null;
+
+    const variant = buildRangeVariant(product, amount);
+    return variant ? { product, variant } : null;
+  }
+
   for (const product of catalog) {
     const variant = product.variants.find((v) => v.id === variantId);
     if (variant) return { product, variant };
   }
+
   return null;
+}
+
+// Materialises a variant for the requested amount, rejecting anything the
+// slider could not have produced (out of bounds or off-step).
+function buildRangeVariant(product: Product, amount: number): ProductVariant | null {
+  const range = product.range;
+  if (!range) return null;
+
+  if (!Number.isInteger(amount) || amount < range.min || amount > range.max) return null;
+  if ((amount - range.min) % range.step !== 0) return null;
+
+  return {
+    id: `${product.id}${RANGE_SEPARATOR}${amount}`,
+    label: `${amount} ${range.unitLabel}`,
+    price: Math.round(amount * range.pricePerUnit * 100) / 100,
+    commands: range.commands.map((command) => command.replace(/{amount}/g, String(amount))),
+  };
 }
