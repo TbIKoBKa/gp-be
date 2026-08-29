@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 import { ServerStatusLogEntity } from './entities/server-status-log.entity';
 import { ServerStatusHourlyEntity } from './entities/server-status-hourly.entity';
 
-const SERVER_ADDRESS = 'play.go-play-gg.com';
+const SERVER_ADDRESS = 'play.go-play.gg';
 const MCSRVSTAT_URL = `https://api.mcsrvstat.us/3/${SERVER_ADDRESS}`;
 
 interface McsrvstatResponse {
