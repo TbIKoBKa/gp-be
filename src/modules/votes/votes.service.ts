@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import crypto from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,8 +9,40 @@ import { HotmcVoteHandlerDto } from './dto/hotmc-vote-handler.dto';
 import { VoteEntity, VoteSource } from './entities/vote.entity';
 import { VoteBalanceEntity } from './entities/vote-balance.entity';
 
+/** Ник как в LimboAuth: только он может прийти в колбэке честного мониторинга. */
+const NICK_RE = /^[A-Za-z0-9_]{3,16}$/;
+/** Голос старше суток не принимаем: так повтор старого колбэка ничего не даёт. */
+const MAX_VOTE_AGE_SEC = 24 * 60 * 60;
+/** Часы мониторинга могут спешить. */
+const MAX_CLOCK_SKEW_SEC = 5 * 60;
+
+/** Сравнение подписей за постоянное время. */
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a, 'utf8');
+  const bb = Buffer.from(b, 'utf8');
+  return ab.length === bb.length && crypto.timingSafeEqual(ab, bb);
+}
+
+/**
+ * Время голоса в секундах, если оно свежее; иначе null.
+ *
+ * Мониторинги шлют UNIX-время; на всякий случай принимаем и миллисекунды. Строгий формат
+ * заодно закрывает подделку у HotMC: подпись там считается от склейки ник+время, и без
+ * проверки времени «Steve» + «1727…» и «Steve1» + «727…» дают одну и ту же подпись.
+ */
+function freshVoteTime(raw: unknown): number | null {
+  const str = String(raw ?? '').trim();
+  if (!/^\d{9,13}$/.test(str)) return null;
+  const seconds = str.length > 11 ? Math.floor(Number(str) / 1000) : Number(str);
+  const now = Math.floor(Date.now() / 1000);
+  if (seconds > now + MAX_CLOCK_SKEW_SEC || now - seconds > MAX_VOTE_AGE_SEC) return null;
+  return seconds;
+}
+
 @Injectable()
 export class VotesService {
+  private readonly logger = new Logger(VotesService.name);
+
   constructor(
     @InjectRepository(VoteEntity)
     private readonly voteEntityRepository: Repository<VoteEntity>,
@@ -143,28 +175,45 @@ export class VotesService {
 
   async hotMcHandler({ nick, sign, time }: HotmcVoteHandlerDto) {
     const secret = this.configService.get('HOTMC_SECRET_KEY');
+    const nickStr = String(nick ?? '');
+    const timeStr = String(time ?? '');
 
-    const sha1 = crypto.createHash('sha1').update(nick + time + secret).digest('hex');
+    const sha1 = crypto.createHash('sha1').update(nickStr + timeStr + secret).digest('hex');
 
-    if (sign !== sha1) {
+    if (!safeEqual(String(sign ?? '').toLowerCase(), sha1)) {
       throw new UnauthorizedException();
     }
 
-    await this.handleVote(nick, VoteSource.HOTMC);
+    const voteTime = freshVoteTime(timeStr);
+    if (voteTime === null || !NICK_RE.test(nickStr)) {
+      this.logger.warn(`hotmc vote refused: nick="${nickStr}" time="${timeStr}" (stale or malformed)`);
+      throw new BadRequestException('stale or malformed vote');
+    }
+
+    // Повтор того же колбэка ничего не начисляет, но отвечаем «ok», чтобы мониторинг не слал его снова.
+    await this.handleVote(nickStr, VoteSource.HOTMC, { externalId: `${nickStr.toLowerCase()}:${voteTime}` });
 
     return 'ok';
   }
 
   async mineservHandler({ project, signature, timestamp, username }: MineservVoteHandlerDto) {
     const secret = this.configService.get('MINESERV_SECRET_KEY');
-    const toHash = `${project}.${secret}.${timestamp}.${username}`;
+    const userStr = String(username ?? '');
+    const timeStr = String(timestamp ?? '');
+    const toHash = `${project}.${secret}.${timeStr}.${userStr}`;
     const selfSign = crypto.createHash('sha256').update(toHash).digest('hex');
 
-    if (selfSign !== signature) {
+    if (!safeEqual(String(signature ?? '').toLowerCase(), selfSign)) {
       throw new UnauthorizedException();
     }
 
-    await this.handleVote(username, VoteSource.MINESERV);
+    const voteTime = freshVoteTime(timeStr);
+    if (voteTime === null || !NICK_RE.test(userStr)) {
+      this.logger.warn(`mineserv vote refused: username="${userStr}" timestamp="${timeStr}" (stale or malformed)`);
+      throw new BadRequestException('stale or malformed vote');
+    }
+
+    await this.handleVote(userStr, VoteSource.MINESERV, { externalId: `${userStr.toLowerCase()}:${voteTime}` });
 
     return 'done';
   }
