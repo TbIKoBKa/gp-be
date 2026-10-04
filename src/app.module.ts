@@ -22,6 +22,9 @@ import { SettingEntity } from './modules/settings/entities/setting.entity';
 import { LuckModule } from './modules/luck/luck.module';
 import { LuckSpinEntity } from './modules/luck/entities/luck-spin.entity';
 import { DatabaseModule } from './modules/database/database.module';
+import { PartnersModule } from './modules/partners/partners.module';
+import { PartnerCampaignEntity } from './modules/partners/entities/partner-campaign.entity';
+import { RegistrationSourceEntity } from './modules/partners/entities/registration-source.entity';
 
 import { LimboAuthPlayer } from './modules/auth/entities/limboauth-player.entity';
 import { OrderEntity } from './modules/shop/entities/order.entity';
@@ -79,7 +82,7 @@ import { ServerStatusHourlyEntity } from './modules/monitoring/entities/server-s
         username: config.get<string>('GP_DB_USER'),
         password: config.get<string>('GP_DB_PASSWORD'),
         database: config.get<string>('GP_DB_NAME'),
-        entities: [OrderEntity, VoteEntity, VoteBalanceEntity, ServerStatusLogEntity, ServerStatusHourlyEntity, SettingEntity, LuckSpinEntity],
+        entities: [OrderEntity, VoteEntity, VoteBalanceEntity, ServerStatusLogEntity, ServerStatusHourlyEntity, SettingEntity, LuckSpinEntity, PartnerCampaignEntity],
         synchronize: true,
         timezone: '+00:00',
       }),
@@ -95,7 +98,7 @@ import { ServerStatusHourlyEntity } from './modules/monitoring/entities/server-s
         username: config.get<string>('MC_DB_USER'),
         password: config.get<string>('MC_DB_PASSWORD'),
         database: config.get<string>('MC_DB_NAME'),
-        entities: [LimboAuthPlayer],
+        entities: [LimboAuthPlayer, RegistrationSourceEntity],
         synchronize: false,
         timezone: '+00:00',
       }),
@@ -118,6 +121,7 @@ import { ServerStatusHourlyEntity } from './modules/monitoring/entities/server-s
     SettingsModule,
     LuckModule,
     DatabaseModule,
+    PartnersModule,
   ],
   controllers: [AppController],
 })
