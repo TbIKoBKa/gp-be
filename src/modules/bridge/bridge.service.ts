@@ -3,10 +3,26 @@ import { ConfigService } from '@nestjs/config';
 import WebSocket from 'ws';
 import { randomUUID } from 'crypto';
 
+export interface BridgeResult {
+  success: boolean;
+  message: string;
+  /**
+   * The command left this process but no answer came back (timeout, connection
+   * dropped after send). It may or may not have run on the server, so repeating
+   * it could grant the purchase twice. False for every definite failure: not
+   * sent at all, or an explicit `success: false` from the hub/proxy/backend.
+   */
+  uncertain: boolean;
+}
+
 interface PendingRequest {
-  resolve: (value: { success: boolean; message: string }) => void;
+  resolve: (value: BridgeResult) => void;
   timer: ReturnType<typeof setTimeout>;
 }
+
+// The hub answers with this text when its own 10s timer fires first — same
+// ambiguity as our local timeout.
+const HUB_TIMEOUT_MESSAGE = 'Request timed out';
 
 @Injectable()
 export class BridgeService implements OnModuleInit, OnModuleDestroy {
@@ -16,9 +32,18 @@ export class BridgeService implements OnModuleInit, OnModuleDestroy {
   private pending = new Map<string, PendingRequest>();
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempt = 0;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  private alive = false;
+  private connectWaiters = new Set<() => void>();
+  private stopped = false;
 
   private static readonly MAX_RECONNECT_DELAY = 60_000;
   private static readonly BASE_RECONNECT_DELAY = 3_000;
+  // Without pings a silently dropped connection (Railway edge) stays OPEN forever:
+  // on 2026-10-23 one sat dead for 15 days and swallowed the first order sent into it.
+  private static readonly HEARTBEAT_INTERVAL = 30_000;
+  // Long enough for one reconnect (3s backoff + handshake) after a dropped socket.
+  private static readonly CONNECT_WAIT = 8_000;
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -34,9 +59,9 @@ export class BridgeService implements OnModuleInit, OnModuleDestroy {
     return this.ws?.readyState === WebSocket.OPEN && this.authenticated;
   }
 
-  async execute(server: string, command: string, timeoutMs = 10_000): Promise<{ success: boolean; message: string }> {
-    if (!this.connected) {
-      return { success: false, message: 'Bridge not connected' };
+  async execute(server: string, command: string, timeoutMs = 10_000): Promise<BridgeResult> {
+    if (!this.connected && !(await this.waitForConnection(BridgeService.CONNECT_WAIT))) {
+      return { success: false, message: 'Bridge not connected', uncertain: false };
     }
 
     return new Promise((resolve) => {
@@ -44,7 +69,7 @@ export class BridgeService implements OnModuleInit, OnModuleDestroy {
 
       const timer = setTimeout(() => {
         this.pending.delete(id);
-        resolve({ success: false, message: 'Request timed out' });
+        resolve({ success: false, message: 'Request timed out', uncertain: true });
       }, timeoutMs);
 
       this.pending.set(id, { resolve, timer });
@@ -58,6 +83,18 @@ export class BridgeService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  private waitForConnection(timeoutMs: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      const done = () => {
+        clearTimeout(timer);
+        this.connectWaiters.delete(done);
+        resolve(this.connected);
+      };
+      const timer = setTimeout(done, timeoutMs);
+      this.connectWaiters.add(done);
+    });
+  }
+
   private connect() {
     const url = this.configService.get<string>('BRIDGE_URL');
 
@@ -68,32 +105,62 @@ export class BridgeService implements OnModuleInit, OnModuleDestroy {
 
     this.logger.log(`Connecting to bridge at ${url}`);
 
-    this.ws = new WebSocket(url);
+    const ws = new WebSocket(url);
+    this.ws = ws;
 
-    this.ws.on('open', () => {
+    ws.on('open', () => {
       this.reconnectAttempt = 0;
       this.logger.log('Connected to bridge, authenticating...');
       const secret = this.configService.get<string>('BRIDGE_SECRET');
       const authPayload = JSON.stringify({ type: 'auth', secret, role: 'api' });
       this.logger.log(`Sending auth payload (secret masked)`);
-      this.ws!.send(authPayload);
+      ws.send(authPayload);
+      this.startHeartbeat(ws);
     });
 
-    this.ws.on('message', (raw: WebSocket.RawData) => {
+    ws.on('pong', () => {
+      this.alive = true;
+    });
+
+    ws.on('message', (raw: WebSocket.RawData) => {
       const text = raw.toString();
       this.logger.log(`Bridge message received: ${text}`);
       this.handleMessage(text);
     });
 
-    this.ws.on('close', (code: number, reason: Buffer) => {
+    ws.on('close', (code: number, reason: Buffer) => {
       this.logger.warn(`Bridge closed: code=${code}, reason=${reason.toString()}`);
+      this.stopHeartbeat();
       this.authenticated = false;
-      this.scheduleReconnect();
+      // Nothing will answer on this socket any more; fail now instead of waiting out the timer.
+      this.failPending('Bridge connection lost');
+      if (!this.stopped) this.scheduleReconnect();
     });
 
-    this.ws.on('error', (err: Error) => {
+    ws.on('error', (err: Error) => {
       this.logger.error(`Bridge error: ${err.message}`);
     });
+  }
+
+  private startHeartbeat(ws: WebSocket) {
+    this.stopHeartbeat();
+    this.alive = true;
+    this.heartbeatTimer = setInterval(() => {
+      if (!this.alive) {
+        this.logger.warn('Bridge did not answer ping, dropping connection');
+        ws.terminate();
+        return;
+      }
+      this.alive = false;
+      ws.ping();
+    }, BridgeService.HEARTBEAT_INTERVAL);
+  }
+
+  private stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
   }
 
   private handleMessage(text: string) {
@@ -103,6 +170,7 @@ export class BridgeService implements OnModuleInit, OnModuleDestroy {
       if (data.type === 'auth' && data.success) {
         this.authenticated = true;
         this.logger.log('Bridge authenticated');
+        for (const done of [...this.connectWaiters]) done();
         return;
       }
 
@@ -111,12 +179,24 @@ export class BridgeService implements OnModuleInit, OnModuleDestroy {
         if (pending) {
           clearTimeout(pending.timer);
           this.pending.delete(data.id);
-          pending.resolve({ success: data.success, message: data.message });
+          pending.resolve({
+            success: data.success,
+            message: data.message,
+            uncertain: !data.success && data.message === HUB_TIMEOUT_MESSAGE,
+          });
         }
       }
     } catch {
       this.logger.warn('Failed to parse bridge message');
     }
+  }
+
+  private failPending(message: string) {
+    for (const [, req] of this.pending) {
+      clearTimeout(req.timer);
+      req.resolve({ success: false, message, uncertain: true });
+    }
+    this.pending.clear();
   }
 
   private scheduleReconnect() {
@@ -137,16 +217,15 @@ export class BridgeService implements OnModuleInit, OnModuleDestroy {
   }
 
   private disconnect() {
+    this.stopped = true;
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+    this.stopHeartbeat();
 
-    for (const [, req] of this.pending) {
-      clearTimeout(req.timer);
-      req.resolve({ success: false, message: 'Bridge shutting down' });
-    }
-    this.pending.clear();
+    this.failPending('Bridge shutting down');
+    for (const done of [...this.connectWaiters]) done();
 
     if (this.ws) {
       this.ws.close();

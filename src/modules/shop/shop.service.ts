@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Cron } from '@nestjs/schedule';
+import { DataSource, LessThan, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -15,6 +16,11 @@ import { VoteBalanceEntity } from '../votes/entities/vote-balance.entity';
 import { SettingsService, SettingKey } from '../settings/settings.service';
 
 const PLISIO_API = 'https://api.plisio.net/api/v1';
+
+// Undelivered paid orders: retry once a minute for a day (the server may be
+// restarting or the proxy may be down), then hand over to the admin panel.
+const DELIVERY_RETRY_INTERVAL = 60_000;
+const DELIVERY_RETRY_WINDOW = 24 * 60 * 60_000;
 
 // Plisio invoice lifecycle statuses (POST callback `status` field).
 const PLISIO_PAID = ['completed', 'mismatch']; // mismatch = paid, but not the exact amount
@@ -58,6 +64,8 @@ interface LavaInvoiceResponse {
 @Injectable()
 export class ShopService {
   private readonly logger = new Logger(ShopService.name);
+  /** Orders being delivered right now — keeps the retry job off a webhook's delivery. */
+  private readonly delivering = new Set<number>();
 
   constructor(
     @InjectRepository(OrderEntity)
@@ -508,7 +516,47 @@ export class ShopService {
     return 'OK';
   }
 
+  // A paid order whose command surely never ran stays PAID and is picked up here.
+  // Orders where the command went out but no answer came back are NOT retried:
+  // cubelets/points would be granted twice. Those go to FAILED for a manual check.
+  @Cron('15 * * * * *')
+  async retryUndelivered() {
+    const now = Date.now();
+    const orders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.PAID,
+        updatedAt: LessThan(new Date(now - DELIVERY_RETRY_INTERVAL)),
+      },
+      order: { id: 'ASC' },
+    });
+
+    for (const order of orders) {
+      if (this.delivering.has(order.id)) continue;
+
+      if (now - order.createdAt.getTime() > DELIVERY_RETRY_WINDOW) {
+        this.logger.error(`Order ${order.id} undelivered for 24h, giving up — redeliver from the admin panel`);
+        order.status = OrderStatus.FAILED;
+        order.updatedAt = new Date();
+        await this.orderRepository.save(order);
+        continue;
+      }
+
+      this.logger.log(`Retrying delivery of order ${order.id}`);
+      await this.deliverOrder(order);
+    }
+  }
+
   private async deliverOrder(order: OrderEntity) {
+    if (this.delivering.has(order.id)) return;
+    this.delivering.add(order.id);
+    try {
+      await this.runDelivery(order);
+    } finally {
+      this.delivering.delete(order.id);
+    }
+  }
+
+  private async runDelivery(order: OrderEntity) {
     const found = findVariant(order.variantId);
     if (!found) {
       this.logger.error(`Variant ${order.variantId} not found for order ${order.id}`);
@@ -520,16 +568,26 @@ export class ShopService {
 
     const { variant } = found;
 
+    let ran = 0;
     for (const cmdTemplate of variant.commands) {
       const command = cmdTemplate.replace(/{player}/g, order.playerName);
       const result = await this.bridgeService.execute(order.server, command);
       if (!result.success) {
-        this.logger.error(`Command failed for order ${order.id}: ${result.message}`);
-        order.status = OrderStatus.FAILED;
+        // A retry repeats every command, so it is only safe while nothing has run yet.
+        const retryable = !result.uncertain && ran === 0;
+        if (retryable) {
+          this.logger.warn(`Command failed for order ${order.id}, will retry: ${result.message}`);
+        } else {
+          this.logger.error(
+            `Command failed for order ${order.id}: ${result.message} — may have run, check in game and redeliver by hand`,
+          );
+          order.status = OrderStatus.FAILED;
+        }
         order.updatedAt = new Date();
         await this.orderRepository.save(order);
         return;
       }
+      ran++;
     }
 
     order.status = OrderStatus.DELIVERED;
